@@ -1,12 +1,34 @@
 <script setup>
 import { ref } from 'vue'
 defineProps(['T'])
+const emit = defineEmits(['show-detail'])
 
 const projectItems = ref([
-    { number: '01', titleKey: 'proj1_title', descKey: 'proj1_desc', tags: ['Scikit-learn', 'Streamlit', 'Python'] },
-    { number: '02', titleKey: 'proj2_title', descKey: 'proj2_desc', tags: ['Plotly', 'Streamlit', 'SQL'] },
-    { number: '03', titleKey: 'proj3_title', descKey: 'proj3_desc', tags: ['NLTK', 'Streamlit', 'NLP'] }
+    { id: 1, number: '01', 
+    titleKey: 'proj1_title', 
+    descKey: 'proj1_desc', 
+    tags: ['Scikit-learn', 'Streamlit', 'Python'], 
+    liveDemoUrl: 'https://loanpredict-sbfbu7qqxasv8bbcd9rjey.streamlit.app/',
+    githubUrl: 'https://github.com/GrmRy/LoanPredict'},
+    { id: 2, number: '02', 
+    titleKey: 'proj2_title', 
+    descKey: 'proj2_desc', 
+    tags: ['Plotly', 'Streamlit', 'Python'], 
+    liveDemoUrl: 'https://kpidashboardsales-sbfbu7qqxasv8bbcd9rjey.streamlit.app/',
+    githubUrl: 'https://github.com/GrmRy/KPI-Dashboard-Streamlit'},
+    { id: 3, 
+    number: '03', 
+    titleKey: 'proj3_title', 
+    descKey: 'proj3_desc', 
+    tags: ['NLTK', 'Streamlit', 'NLP'], 
+    liveDemoUrl: 'https://hoksentimentanalysis-3bkajue23249tk2xqdkgod.streamlit.app/',
+    githubUrl: 'https://github.com/GrmRy/HOK_SentimentAnalysis'}
 ])
+
+
+const openDetail = (project) => {
+  emit('show-detail', project) 
+}
 </script>
 
 <template>
@@ -18,7 +40,13 @@ const projectItems = ref([
       </div>
       <div class="section-content">
         <div class="projects-grid">
-          <a href="#" class="project-card" v-for="project in projectItems" :key="project.number">
+          <div 
+            class="project-card" 
+            v-for="project in projectItems" 
+            :key="project.id"
+            @click="openDetail(project)"
+            style="cursor: pointer;"
+          >
             <div class="project-number">{{ project.number }}</div>
             <div class="project-content">
               <h3>{{ T[project.titleKey] }}</h3>
@@ -27,7 +55,7 @@ const projectItems = ref([
                 <span class="tag" v-for="tag in project.tags" :key="tag">{{ tag }}</span>
               </div>
             </div>
-          </a>
+          </div>
         </div>
       </div>
     </div>

@@ -7,56 +7,45 @@ import Expertise from './components/Expertise.vue'
 import Projects from './components/Projects.vue'
 import Contact from './components/Contact.vue'
 import Footer from './components/Footer.vue'
+import ProjectModal from './components/ProjectModal.vue' // 1. Impor komponen modal
 
 import translations from './translations.js'
 
-
+// ... (state untuk bahasa dan tema tetap sama)
 const currentLang = ref('en')
 const isLightMode = ref(false)
-
 const T = computed(() => translations[currentLang.value])
 
+// 2. Tambahkan state untuk modal
+const selectedProject = ref(null) // null berarti modal tersembunyi
 
-function setLanguage(lang) {
-  currentLang.value = lang
+// 3. Buat fungsi untuk menampilkan dan menyembunyikan modal
+function showProjectDetail(project) {
+  selectedProject.value = project
+  document.body.style.overflow = 'hidden'; // Mencegah scroll di belakang modal
 }
 
-function toggleTheme() {
-  isLightMode.value = !isLightMode.value
-  document.body.classList.toggle('light-mode', isLightMode.value)
+function closeProjectModal() {
+  selectedProject.value = null
+  document.body.style.overflow = ''; // Mengembalikan fungsi scroll
 }
 
-onMounted(() => {
-
-  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-      e.preventDefault()
-      const target = document.querySelector(this.getAttribute('href'))
-      if (target) {
-        target.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      }
-    })
-  })
-})
+// ... (sisa script setup Anda)
 </script>
 
 <template>
-  <Header 
-    @set-language="setLanguage" 
-    @toggle-theme="toggleTheme"
-    :current-lang="currentLang"
-    :is-light-mode="isLightMode"
-    :T="T"
-  />
   <main>
     <Hero :T="T" />
     <About :T="T" />
     <Expertise :T="T" />
-    <Projects :T="T" />
+    <Projects :T="T" @show-detail="showProjectDetail" />
     <Contact :T="T" />
   </main>
-  <Footer :T="T" />
+  
+  <ProjectModal 
+    v-if="selectedProject" 
+    :project="selectedProject"
+    :T="T"
+    @close="closeProjectModal" 
+  />
 </template>
-
-<style scoped>
-</style>
