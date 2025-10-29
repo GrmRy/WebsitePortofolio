@@ -7,33 +7,38 @@ import Expertise from './components/Expertise.vue'
 import Projects from './components/Projects.vue'
 import Contact from './components/Contact.vue'
 import Footer from './components/Footer.vue'
-import ProjectModal from './components/ProjectModal.vue' // 1. Impor komponen modal
-
+import ProjectModal from './components/ProjectModal.vue'
+import ScrollProgress from './components/ScrollProgress.vue'
+import ScrollToTop from './components/ScrollToTop.vue'
 import translations from './translations.js'
 
-// ... (state untuk bahasa dan tema tetap sama)
+
+
 const currentLang = ref('en')
 const isLightMode = ref(false)
 const T = computed(() => translations[currentLang.value])
 
-// 2. Tambahkan state untuk modal
-const selectedProject = ref(null) // null berarti modal tersembunyi
 
-// 3. Buat fungsi untuk menampilkan dan menyembunyikan modal
+const selectedProject = ref(null) 
+
+
 function showProjectDetail(project) {
   selectedProject.value = project
-  document.body.style.overflow = 'hidden'; // Mencegah scroll di belakang modal
+  document.body.style.overflow = 'hidden'; 
 }
 
 function closeProjectModal() {
   selectedProject.value = null
-  document.body.style.overflow = ''; // Mengembalikan fungsi scroll
+  document.body.style.overflow = ''; 
 }
 
-// ... (sisa script setup Anda)
+
 </script>
 
 <template>
+  <div>
+     <ScrollProgress />
+     <ScrollToTop />
   <main>
     <Hero :T="T" />
     <About :T="T" />
@@ -48,4 +53,5 @@ function closeProjectModal() {
     :T="T"
     @close="closeProjectModal" 
   />
+  </div>
 </template>

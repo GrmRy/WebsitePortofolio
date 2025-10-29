@@ -1,12 +1,23 @@
 <script setup>
+import TypingAnimation from './TypingAnimation.vue'
+
 defineProps(['T'])
+
+const typingTexts = [
+  'Data Scientist',
+  'Machine Learning Engineer',
+  'Problem Solver',
+  'Data Analyst'
+]
 </script>
 
 <template>
   <section class="hero">
     <div class="container">
       <div class="hero-content">
-        <div class="hero-label fade-in">{{ T.hero_label }}</div>
+        <div class="hero-label fade-in">
+          <TypingAnimation :texts="typingTexts" />
+        </div>
         <h1 class="hero-title fade-in">Andrea Satria Nagari</h1>
         <p class="hero-subtitle fade-in">{{ T.hero_subtitle }}</p>
         <div class="hero-socials fade-in">
@@ -21,3 +32,13 @@ defineProps(['T'])
     </div>
   </section>
 </template>
+
+<style scoped>
+.hero-label {
+  font-size: 1.125rem;
+  color: var(--accent);
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+  min-height: 1.5em;
+}
+</style>
