@@ -1,10 +1,28 @@
 <script setup>
 import { ref } from 'vue'
+import Timeline from './Timeline.vue'
 
 defineProps(['T'])
 
 const activeTab = ref('personal')
 
+const experienceItems = [
+  {
+    date: '2025 - Present',
+    title: 'Data Support',
+    company: 'PT. Sriwahana Adityakarta',
+    description: 'Supporting data operations and analysis for business intelligence initiatives.'
+  }
+]
+
+const educationItems = [
+  {
+    date: '2018 - 2024',
+    title: 'Bachelor of Electrical Engineering',
+    company: 'Universitas Tidar',
+    description: 'Focused on data processing, machine learning, and electrical systems optimization.'
+  }
+]
 
 function setActiveTab(tabName) {
   activeTab.value = tabName
@@ -20,8 +38,7 @@ function setActiveTab(tabName) {
       </div>
       
       <div class="section-content about-layout">
-        <div class="about-photo-placeholder">
-          </div>
+        <div class="about-photo-placeholder"></div>
 
         <div class="about-content">
           <div class="tab-buttons">
@@ -32,10 +49,16 @@ function setActiveTab(tabName) {
               Personal Info
             </button>
             <button 
-              @click="setActiveTab('qualifications')" 
-              :class="{ 'active': activeTab === 'qualifications' }"
+              @click="setActiveTab('experience')" 
+              :class="{ 'active': activeTab === 'experience' }"
               class="tab-btn">
-              Qualifications
+              Experience
+            </button>
+            <button 
+              @click="setActiveTab('education')" 
+              :class="{ 'active': activeTab === 'education' }"
+              class="tab-btn">
+              Education
             </button>
             <button 
               @click="setActiveTab('skills')" 
@@ -50,27 +73,19 @@ function setActiveTab(tabName) {
               <div v-if="activeTab === 'personal'" class="content-panel">
                 <h3 class="panel-title">Data Scientist & Machine Learning Engineer</h3>
                 <p class="panel-description">{{ T.about_p1 }} {{ T.about_p2 }}</p>
-                </div>
+              </div>
 
-              <else-if v-else-if="activeTab === 'qualifications'" class="content-panel">
-                <h3 class="panel-title">My Journey</h3>
-                 <div class="journey-columns">
-                    <div>
-                        <h4>Experience</h4>
-                        <ul>
-                            <li><strong>PT.Sriwahana Adityakarta</strong> - Data Support (2025-Now)</li>
-                        </ul>
-                    </div>
-                    <div>
-                        <h4>Education</h4>
-                        <ul>
-                            <li><strong>Universitas Tidar</strong> - Electrical Engineering (2018-2024)</li>
-                        </ul>
-                    </div>
-                 </div>
-              </else-if>
+              <div v-else-if="activeTab === 'experience'" class="content-panel">
+                <h3 class="panel-title">Professional Experience</h3>
+                <Timeline :items="experienceItems" />
+              </div>
 
-              <else-if v-else-if="activeTab === 'skills'" class="content-panel">
+              <div v-else-if="activeTab === 'education'" class="content-panel">
+                <h3 class="panel-title">Educational Background</h3>
+                <Timeline :items="educationItems" />
+              </div>
+
+              <div v-else-if="activeTab === 'skills'" class="content-panel">
                 <h3 class="panel-title">Tools I Use Everyday</h3>
                 <ul class="skills-list">
                   <li>Python</li>
@@ -79,8 +94,10 @@ function setActiveTab(tabName) {
                   <li>TensorFlow</li>
                   <li>Streamlit</li>
                   <li>Vue.js</li>
+                  <li>Pandas</li>
+                  <li>NumPy</li>
                 </ul>
-              </else-if>
+              </div>
             </Transition>
           </div>
         </div>
@@ -102,10 +119,8 @@ function setActiveTab(tabName) {
   padding-top: 120%; 
   background-color: var(--border);
   border-radius: 12px;
-  /* Hapus ini jika Anda menggunakan tag <img> asli */
 }
 
-/* Styling untuk Tabs */
 .tab-buttons {
   display: flex;
   background-color: rgba(0,0,0,0.2);
@@ -113,6 +128,7 @@ function setActiveTab(tabName) {
   border-radius: 30px;
   margin-bottom: 2rem;
   max-width: max-content;
+  flex-wrap: wrap;
 }
 
 .tab-btn {
@@ -124,6 +140,7 @@ function setActiveTab(tabName) {
   cursor: pointer;
   font-weight: 500;
   transition: all 0.3s ease;
+  white-space: nowrap;
 }
 
 .tab-btn:hover {
@@ -136,36 +153,41 @@ function setActiveTab(tabName) {
 }
 
 .tab-content {
-  min-height: 250px; 
+  min-height: 350px; 
 }
 
 .panel-title {
-    font-size: 1.75rem;
-    font-weight: 600;
-    margin-bottom: 1rem;
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
 }
 
 .panel-description {
-    color: var(--text-secondary);
-    line-height: 1.8;
-}
-
-.journey-columns {
-    display: flex;
-    gap: 2rem;
+  color: var(--text-secondary);
+  line-height: 1.8;
 }
 
 .skills-list {
-    list-style: none;
-    padding: 0;
-    columns: 2; 
+  list-style: none;
+  padding: 0;
+  columns: 2; 
+  column-gap: 2rem;
 }
+
 .skills-list li {
-    color: var(--text-secondary);
-    margin-bottom: 0.75rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.75rem;
+  padding-left: 1.5rem;
+  position: relative;
 }
 
-
+.skills-list li::before {
+  content: '▹';
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+  font-size: 1.2rem;
+}
 
 .fade-enter-active,
 .fade-leave-active {
@@ -177,14 +199,21 @@ function setActiveTab(tabName) {
   opacity: 0;
 }
 
-
-
 @media (max-width: 768px) {
   .about-layout {
     grid-template-columns: 1fr; 
   }
+  
   .about-photo-placeholder {
-      display: none;
+    display: none;
+  }
+
+  .tab-buttons {
+    max-width: 100%;
+  }
+
+  .skills-list {
+    columns: 1;
   }
 }
 </style>
