@@ -21,7 +21,9 @@ const projectItems = ref([
       'Interactive data visualization',
       'Model performance metrics',
       'Feature importance analysis'
-    ]
+    ],
+    challenges: 'Handling imbalanced datasets and ensuring model fairness across different demographic groups.',
+    outcome: 'Achieved 92% accuracy with balanced precision and recall metrics.'
   },
   { 
     id: 2,
@@ -39,7 +41,9 @@ const projectItems = ref([
       'Interactive charts using Plotly',
       'Sales trend analysis',
       'Regional performance comparison'
-    ]
+    ],
+    challenges: 'Optimizing data refresh rates and creating responsive visualizations for large datasets.',
+    outcome: 'Reduced reporting time by 70% and improved decision-making speed.'
   },
   { 
     id: 3,
@@ -57,11 +61,12 @@ const projectItems = ref([
       'Real-time text analysis',
       'Topic modeling and keyword extraction',
       'Word cloud visualization'
-    ]
+    ],
+    challenges: 'Processing multilingual text and handling informal gaming terminology and slang.',
+    outcome: 'Successfully classified 85% of reviews with high confidence scores.'
   }
 ])
 
-// Carousel logic
 const currentIndex = ref(0)
 const isPaused = ref(false)
 let autoSlideInterval = null
@@ -125,61 +130,62 @@ onUnmounted(() => {
         <h2 class="section-title">{{ T.projects_title }}</h2>
       </div>
       <div class="section-content">
-        <!-- Carousel Container -->
-        <div class="carousel-container" @mouseenter="handleMouseEnter" @mouseleave="handleMouseLeave">
-          <!-- Navigation Arrows -->
+        <div class="carousel-outer" @mouseenter="handleMouseEnter" @mouseleave="handleMouseLeave">
+          <!-- Navigation Left -->
           <button @click="prevSlide" class="carousel-nav left" aria-label="Previous project">
             <i class="fas fa-chevron-left"></i>
           </button>
           
+          <!-- Main Card Area -->
+          <div class="carousel-main">
+            <TransitionGroup name="fade" mode="out-in">
+              <div :key="currentIndex" class="carousel-card">
+                <div class="carousel-icon">
+                  <i :class="currentProject.icon"></i>
+                </div>
+                
+                <h3 class="carousel-title">{{ T[currentProject.titleKey] }}</h3>
+                
+                <p class="carousel-description">{{ T[currentProject.descKey] }}</p>
+                
+                <div class="carousel-tags">
+                  <span v-for="tag in currentProject.tags" :key="tag" class="tag">{{ tag }}</span>
+                </div>
+
+                <div class="carousel-actions">
+                  <button @click="openDetail" class="carousel-btn primary">
+                    <i class="fas fa-info-circle"></i> View Details
+                  </button>
+                  <a 
+                    v-if="currentProject.liveDemoUrl"
+                    :href="currentProject.liveDemoUrl" 
+                    target="_blank" 
+                    class="carousel-btn secondary"
+                  >
+                    <i class="fas fa-external-link-alt"></i> Live Demo
+                  </a>
+                  <a 
+                    v-if="currentProject.githubUrl"
+                    :href="currentProject.githubUrl" 
+                    target="_blank" 
+                    class="carousel-btn secondary"
+                  >
+                    <i class="fab fa-github"></i> View Code
+                  </a>
+                </div>
+
+                <div class="project-counter">
+                  {{ currentIndex + 1 }} / {{ projectItems.length }}
+                </div>
+              </div>
+            </TransitionGroup>
+          </div>
+
+          <!-- Navigation Right -->
           <button @click="nextSlide" class="carousel-nav right" aria-label="Next project">
             <i class="fas fa-chevron-right"></i>
           </button>
-
-          <!-- Carousel Card -->
-          <TransitionGroup name="fade" mode="out-in">
-            <div :key="currentIndex" class="carousel-card">
-              <div class="carousel-icon">
-                <i :class="currentProject.icon"></i>
-              </div>
-              
-              <h3 class="carousel-title">{{ T[currentProject.titleKey] }}</h3>
-              
-              <p class="carousel-description">{{ T[currentProject.descKey] }}</p>
-              
-              <div class="carousel-tags">
-                <span v-for="tag in currentProject.tags" :key="tag" class="tag">{{ tag }}</span>
-              </div>
-
-              <div class="carousel-actions">
-                <button @click="openDetail" class="carousel-btn primary">
-                  <i class="fas fa-info-circle"></i> View Details
-                </button>
-                <a 
-                  v-if="currentProject.liveDemoUrl"
-                  :href="currentProject.liveDemoUrl" 
-                  target="_blank" 
-                  class="carousel-btn secondary"
-                >
-                  <i class="fas fa-external-link-alt"></i> Live Demo
-                </a>
-                <a 
-                  v-if="currentProject.githubUrl"
-                  :href="currentProject.githubUrl" 
-                  target="_blank" 
-                  class="carousel-btn secondary"
-                >
-                  <i class="fab fa-github"></i> View Code
-                </a>
-              </div>
-
-              <!-- Project Counter -->
-              <div class="project-counter">
-                {{ currentIndex + 1 }} / {{ projectItems.length }}
-              </div>
-            </div>
-          </TransitionGroup>
-
+          
           <!-- Dots Navigation -->
           <div class="carousel-dots">
             <button
@@ -191,7 +197,7 @@ onUnmounted(() => {
             ></button>
           </div>
 
-          <!-- Auto-play indicator -->
+          <!-- Autoplay Indicator -->
           <div class="autoplay-indicator" :class="{ paused: isPaused }">
             <i :class="isPaused ? 'fas fa-pause' : 'fas fa-play'"></i>
             {{ isPaused ? 'Paused' : 'Auto-playing' }}
@@ -203,17 +209,19 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-.carousel-container {
+/* Main Container */
+.carousel-outer {
   position: relative;
-  max-width: 700px;
+  max-width: 1100px;
   margin: 0 auto;
-  padding: 0 4rem;
+  display: grid;
+  grid-template-columns: 60px 1fr 60px;
+  gap: 2rem;
+  align-items: center;
 }
 
+/* Navigation Buttons */
 .carousel-nav {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
   background: rgba(0, 217, 255, 0.1);
   border: 1px solid rgba(0, 217, 255, 0.3);
   width: 50px;
@@ -226,28 +234,28 @@ onUnmounted(() => {
   transition: all 0.3s ease;
   color: var(--accent);
   font-size: 1.2rem;
-  z-index: 10;
+  align-self: center;
+  justify-self: center;
 }
 
 .carousel-nav:hover {
   background: var(--accent);
   color: var(--bg);
-  transform: translateY(-50%) scale(1.1);
+  transform: scale(1.15);
 }
 
-.carousel-nav.left {
-  left: 0;
-}
-
-.carousel-nav.right {
-  right: 0;
+/* Card Container */
+.carousel-main {
+  width: 100%;
+  max-width: 700px;
+  margin: 0 auto;
 }
 
 .carousel-card {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 3rem 2rem;
+  padding: 3rem 2.5rem;
   text-align: center;
   transition: all 0.3s ease;
 }
@@ -257,6 +265,7 @@ onUnmounted(() => {
   box-shadow: 0 10px 40px rgba(0, 217, 255, 0.1);
 }
 
+/* Icon */
 .carousel-icon {
   width: 100px;
   height: 100px;
@@ -271,6 +280,7 @@ onUnmounted(() => {
   color: var(--accent);
 }
 
+/* Title & Description */
 .carousel-title {
   font-size: 2rem;
   font-weight: 700;
@@ -283,11 +293,9 @@ onUnmounted(() => {
   color: var(--text-secondary);
   line-height: 1.8;
   margin-bottom: 2rem;
-  max-width: 600px;
-  margin-left: auto;
-  margin-right: auto;
 }
 
+/* Tags */
 .carousel-tags {
   display: flex;
   flex-wrap: wrap;
@@ -305,6 +313,7 @@ onUnmounted(() => {
   color: var(--accent);
 }
 
+/* Action Buttons */
 .carousel-actions {
   display: flex;
   justify-content: center;
@@ -349,17 +358,22 @@ onUnmounted(() => {
   transform: translateY(-2px);
 }
 
+/* Counter */
 .project-counter {
   color: var(--text-secondary);
   font-size: 0.9rem;
   font-weight: 500;
 }
 
+/* Dots */
 .carousel-dots {
+  position: absolute;
+  bottom: -3.5rem;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   justify-content: center;
   gap: 0.75rem;
-  margin-top: 2rem;
 }
 
 .dot {
@@ -385,9 +399,10 @@ onUnmounted(() => {
   box-shadow: 0 0 10px rgba(0, 217, 255, 0.5);
 }
 
+/* Autoplay Indicator */
 .autoplay-indicator {
   position: absolute;
-  bottom: -3rem;
+  bottom: -5.5rem;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -410,7 +425,7 @@ onUnmounted(() => {
   color: #ff8800;
 }
 
-/* Fade Transition */
+/* Transitions */
 .fade-enter-active,
 .fade-leave-active {
   transition: all 0.5s ease;
@@ -426,15 +441,33 @@ onUnmounted(() => {
   transform: translateX(-30px);
 }
 
+/* Responsive */
 @media (max-width: 768px) {
-  .carousel-container {
-    padding: 0 3rem;
+  .carousel-outer {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 1.5rem;
+    padding: 0 1rem;
   }
 
   .carousel-nav {
-    width: 40px;
-    height: 40px;
-    font-size: 1rem;
+    width: 45px;
+    height: 45px;
+    font-size: 1.1rem;
+    grid-column: 1;
+  }
+
+  .carousel-nav.left {
+    grid-row: 1;
+  }
+
+  .carousel-main {
+    grid-row: 2;
+    grid-column: 1;
+  }
+
+  .carousel-nav.right {
+    grid-row: 3;
   }
 
   .carousel-card {
@@ -462,6 +495,14 @@ onUnmounted(() => {
   .carousel-btn {
     width: 100%;
     justify-content: center;
+  }
+  
+  .carousel-dots {
+    bottom: -2.5rem;
+  }
+  
+  .autoplay-indicator {
+    bottom: -4.5rem;
   }
 }
 </style>

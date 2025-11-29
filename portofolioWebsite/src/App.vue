@@ -13,7 +13,6 @@ import AnimatedBackground from './components/AnimatedBackground.vue'
 import translations from './translations.js'
 
 const currentLang = ref('en')
-const isLightMode = ref(false)
 const T = computed(() => translations[currentLang.value])
 
 const selectedProject = ref(null)
@@ -34,7 +33,7 @@ const isScrolling = ref(false)
 const isMobile = ref(false)
 
 const scrollToSection = (index) => {
-  if (index < 0 || index >= sections.value.length) return
+  if (index < 0 || index >= sections.value.length || isScrolling.value) return
   
   isScrolling.value = true
   currentSection.value = index
@@ -44,7 +43,6 @@ const scrollToSection = (index) => {
     section.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
   
-  // Lock scroll untuk 1 detik
   setTimeout(() => {
     isScrolling.value = false
   }, 1000)
@@ -56,12 +54,10 @@ const handleWheel = (e) => {
   e.preventDefault()
   
   if (e.deltaY > 0) {
-    // Scroll down
     if (currentSection.value < sections.value.length - 1) {
       scrollToSection(currentSection.value + 1)
     }
   } else {
-    // Scroll up
     if (currentSection.value > 0) {
       scrollToSection(currentSection.value - 1)
     }
@@ -90,6 +86,22 @@ const handleKeydown = (e) => {
   }
 }
 
+const updateCurrentSection = () => {
+  if (isMobile.value || isScrolling.value) return
+  
+  const scrollPosition = window.scrollY + window.innerHeight / 2
+  
+  sections.value.forEach((section, index) => {
+    const rect = section.getBoundingClientRect()
+    const sectionTop = rect.top + window.scrollY
+    const sectionBottom = sectionTop + rect.height
+    
+    if (scrollPosition >= sectionTop && scrollPosition < sectionBottom) {
+      currentSection.value = index
+    }
+  })
+}
+
 const checkMobile = () => {
   isMobile.value = window.innerWidth <= 768
 }
@@ -101,10 +113,14 @@ onMounted(() => {
     checkMobile()
     window.addEventListener('resize', checkMobile)
     
-    // Only add wheel event if not mobile
     if (!isMobile.value) {
       window.addEventListener('wheel', handleWheel, { passive: false })
       window.addEventListener('keydown', handleKeydown)
+    }
+    
+    // For mobile, track scroll position
+    if (isMobile.value) {
+      window.addEventListener('scroll', updateCurrentSection)
     }
   }, 100)
 })
@@ -113,6 +129,7 @@ onUnmounted(() => {
   window.removeEventListener('wheel', handleWheel)
   window.removeEventListener('keydown', handleKeydown)
   window.removeEventListener('resize', checkMobile)
+  window.removeEventListener('scroll', updateCurrentSection)
 })
 </script>
 
@@ -206,6 +223,7 @@ html {
   
   .fullpage-section {
     min-height: auto;
+    padding: 4rem 0;
   }
   
   .scroll-navigation {
