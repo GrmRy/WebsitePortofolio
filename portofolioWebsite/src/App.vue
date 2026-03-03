@@ -7,7 +7,6 @@ import Contact from './components/Contact.vue'
 import ProjectModal from './components/ProjectModal.vue'
 import ScrollProgress from './components/ScrollProgress.vue'
 import AnimatedBackground from './components/AnimatedBackground.vue'
-
 import translations from './translations.js'
 
 const currentLang = ref('en')
@@ -35,91 +34,53 @@ function setLanguage(lang) {
 
 const scrollToSection = (index) => {
   if (index < 0 || index >= sections.value.length || isScrolling.value) return
-  
   isScrolling.value = true
   currentSection.value = index
-  
-  const section = sections.value[index]
-  if (section) {
-    section.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }
-  
-  setTimeout(() => {
-    isScrolling.value = false
-  }, 1000)
+  sections.value[index]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  setTimeout(() => { isScrolling.value = false }, 1000)
 }
 
 const handleWheel = (e) => {
   if (isMobile.value || isScrolling.value || selectedProject.value) return
-  
   e.preventDefault()
-  
-  if (e.deltaY > 0) {
-    if (currentSection.value < sections.value.length - 1) {
-      scrollToSection(currentSection.value + 1)
-    }
-  } else {
-    if (currentSection.value > 0) {
-      scrollToSection(currentSection.value - 1)
-    }
+  if (e.deltaY > 0 && currentSection.value < sections.value.length - 1) {
+    scrollToSection(currentSection.value + 1)
+  } else if (e.deltaY < 0 && currentSection.value > 0) {
+    scrollToSection(currentSection.value - 1)
   }
 }
 
 const handleKeydown = (e) => {
   if (isMobile.value || isScrolling.value || selectedProject.value) return
-  
-  if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') {
+  if (['ArrowDown', 'PageDown', ' '].includes(e.key)) {
     e.preventDefault()
-    if (currentSection.value < sections.value.length - 1) {
-      scrollToSection(currentSection.value + 1)
-    }
-  } else if (e.key === 'ArrowUp' || e.key === 'PageUp') {
+    if (currentSection.value < sections.value.length - 1) scrollToSection(currentSection.value + 1)
+  } else if (['ArrowUp', 'PageUp'].includes(e.key)) {
     e.preventDefault()
-    if (currentSection.value > 0) {
-      scrollToSection(currentSection.value - 1)
-    }
-  } else if (e.key === 'Home') {
-    e.preventDefault()
-    scrollToSection(0)
-  } else if (e.key === 'End') {
-    e.preventDefault()
-    scrollToSection(sections.value.length - 1)
+    if (currentSection.value > 0) scrollToSection(currentSection.value - 1)
   }
 }
 
 const updateCurrentSection = () => {
-  if (isMobile.value || isScrolling.value) return
-  
-  const scrollPosition = window.scrollY + window.innerHeight / 2
-  
-  sections.value.forEach((section, index) => {
-    const rect = section.getBoundingClientRect()
-    const sectionTop = rect.top + window.scrollY
-    const sectionBottom = sectionTop + rect.height
-    
-    if (scrollPosition >= sectionTop && scrollPosition < sectionBottom) {
-      currentSection.value = index
-    }
+  if (isScrolling.value) return
+  const mid = window.scrollY + window.innerHeight / 2
+  sections.value.forEach((s, i) => {
+    const top = s.getBoundingClientRect().top + window.scrollY
+    if (mid >= top && mid < top + s.offsetHeight) currentSection.value = i
   })
 }
 
-const checkMobile = () => {
-  isMobile.value = window.innerWidth <= 768
-}
+const checkMobile = () => { isMobile.value = window.innerWidth <= 768 }
 
 onMounted(() => {
   setTimeout(() => {
     sections.value = Array.from(document.querySelectorAll('.fullpage-section'))
-    
     checkMobile()
     window.addEventListener('resize', checkMobile)
-    
     if (!isMobile.value) {
       window.addEventListener('wheel', handleWheel, { passive: false })
       window.addEventListener('keydown', handleKeydown)
-    }
-    
-    if (isMobile.value) {
+    } else {
       window.addEventListener('scroll', updateCurrentSection)
     }
   }, 100)
@@ -131,87 +92,83 @@ onUnmounted(() => {
   window.removeEventListener('resize', checkMobile)
   window.removeEventListener('scroll', updateCurrentSection)
 })
+
+const sectionLabels = ['./init', './about', './projects', './contact']
 </script>
 
 <template>
   <div class="app">
     <AnimatedBackground />
     <ScrollProgress />
-    
+
     <!-- Navbar -->
     <nav class="navbar">
       <div class="container">
         <div class="nav-content">
           <a href="#" @click.prevent="scrollToSection(0)" class="logo">
-            <span class="logo-text">A</span>
-            <span class="logo-dot">.</span>
+            <i class="fas fa-terminal logo-icon"></i>
+            <span class="logo-text">ASN_ROOT</span>
           </a>
-          
+
           <div class="nav-links">
-            <a @click.prevent="scrollToSection(1)" class="nav-link">About</a>
-            <a @click.prevent="scrollToSection(2)" class="nav-link">Projects</a>
-            <a @click.prevent="scrollToSection(3)" class="nav-link">Contact</a>
+            <a @click.prevent="scrollToSection(0)" class="nav-link">./init</a>
+            <a @click.prevent="scrollToSection(1)" class="nav-link">./about</a>
+            <a @click.prevent="scrollToSection(2)" class="nav-link">./projects</a>
+            <a @click.prevent="scrollToSection(3)" class="nav-link">./contact</a>
           </div>
-          
+
           <div class="nav-actions">
-            <button 
+            <button
               @click="setLanguage('en')"
               :class="['lang-btn', { active: currentLang === 'en' }]"
-            >
-              EN
-            </button>
-            <button 
+            >EN</button>
+            <button
               @click="setLanguage('id')"
               :class="['lang-btn', { active: currentLang === 'id' }]"
-            >
-              ID
-            </button>
+            >ID</button>
           </div>
         </div>
       </div>
     </nav>
-    
-    <!-- Navigation Dots -->
-    <div class="scroll-navigation">
+
+    <!-- Nav Dots -->
+    <div class="nav-dots" v-if="!isMobile">
       <button
-        v-for="(section, index) in sections"
+        v-for="(label, index) in sectionLabels"
         :key="index"
         @click="scrollToSection(index)"
-        :class="{ 'active': currentSection === index }"
-        class="nav-dot"
-        :aria-label="`Go to section ${index + 1}`"
+        :class="['nav-dot', { active: currentSection === index }]"
       >
-        <span class="dot-label">
-          {{ index === 0 ? 'Home' : index === 1 ? 'About' : index === 2 ? 'Projects' : 'Contact' }}
-        </span>
+        <span class="dot-tooltip">{{ label }}</span>
       </button>
     </div>
-    
+
     <!-- Scroll Hint -->
     <Transition name="fade">
       <div v-if="currentSection === 0 && !isMobile" class="scroll-hint">
-        <span>Scroll to explore</span>
+        <span>scroll to explore</span>
         <i class="fas fa-chevron-down"></i>
       </div>
     </Transition>
-    
+
     <main>
-      <Hero :T="T" class="fullpage-section" />
-      <About :T="T" class="fullpage-section" />
+      <Hero     :T="T" class="fullpage-section" />
+      <About    :T="T" class="fullpage-section" />
       <Projects :T="T" @show-detail="showProjectDetail" class="fullpage-section" />
-      <Contact :T="T" class="fullpage-section" />
+      <Contact  :T="T" class="fullpage-section" />
     </main>
-    
-    <ProjectModal 
-      v-if="selectedProject" 
+
+    <ProjectModal
+      v-if="selectedProject"
       :project="selectedProject"
       :T="T"
-      @close="closeProjectModal" 
+      @close="closeProjectModal"
     />
   </div>
 </template>
 
 <style>
+/* ===== GLOBAL ===== */
 html {
   scroll-behavior: smooth;
   scroll-snap-type: y mandatory;
@@ -224,125 +181,98 @@ html {
   justify-content: center;
   scroll-snap-align: start;
   position: relative;
-  opacity: 0;
-  animation: sectionFadeIn 0.8s ease forwards;
 }
 
-@keyframes sectionFadeIn {
-  to {
-    opacity: 1;
-  }
-}
+main { padding-top: 56px; }
 
-/* Navbar */
+/* ===== NAVBAR ===== */
 .navbar {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
+  top: 0; left: 0; right: 0;
   z-index: 1000;
-  background: rgba(15, 15, 35, 0.8);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--border);
+  background: rgba(5, 11, 20, 0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(0, 240, 255, 0.12);
   animation: navSlideDown 0.6s ease;
 }
 
 @keyframes navSlideDown {
-  from {
-    transform: translateY(-100%);
-  }
-  to {
-    transform: translateY(0);
-  }
+  from { transform: translateY(-100%); }
+  to   { transform: translateY(0); }
 }
 
 .nav-content {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 60px;
+  height: 56px;
 }
 
+/* Logo */
 .logo {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
-  font-size: 1.25rem;
-  font-weight: 900;
-  color: var(--text);
+  gap: 0.5rem;
   text-decoration: none;
   transition: all 0.3s ease;
-  cursor: pointer;
 }
 
-.logo:hover {
-  transform: scale(1.05);
+.logo:hover { opacity: 0.8; }
+
+.logo-icon {
+  color: var(--accent);
+  font-size: 0.85rem;
 }
 
 .logo-text {
-  background: linear-gradient(135deg, var(--accent), var(--purple));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.1em;
 }
 
-.logo-dot {
-  color: var(--pink);
-  animation: blink 2s infinite;
-}
-
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
-}
-
+/* Nav Links */
 .nav-links {
   display: flex;
-  gap: 1.5rem;
+  gap: 1.75rem;
 }
 
 .nav-link {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
   color: var(--text-secondary);
-  font-weight: 500;
-  font-size: 0.875rem;
-  text-decoration: none;
-  transition: all 0.2s ease;
-  position: relative;
   cursor: pointer;
+  text-decoration: none;
+  position: relative;
+  transition: color 0.2s ease;
 }
 
 .nav-link::after {
   content: '';
   position: absolute;
-  bottom: -5px;
-  left: 0;
+  bottom: -4px; left: 0;
   width: 0;
-  height: 2px;
+  height: 1px;
   background: var(--accent);
   transition: width 0.3s ease;
 }
 
-.nav-link:hover {
-  color: var(--text);
-}
+.nav-link:hover { color: var(--accent); }
+.nav-link:hover::after { width: 100%; }
 
-.nav-link:hover::after {
-  width: 100%;
-}
-
-.nav-actions {
-  display: flex;
-  gap: 0.5rem;
-}
+/* Lang Buttons */
+.nav-actions { display: flex; gap: 0.4rem; }
 
 .lang-btn {
-  padding: 0.5rem 1rem;
+  padding: 0.35rem 0.85rem;
   background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 0.5rem;
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  border-radius: 4px;
   color: var(--text-secondary);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
   font-weight: 600;
-  font-size: 0.875rem;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -355,26 +285,26 @@ html {
 .lang-btn.active {
   background: var(--accent);
   border-color: var(--accent);
-  color: white;
+  color: var(--bg);
 }
 
-/* Navigation Dots */
-.scroll-navigation {
+/* ===== NAV DOTS ===== */
+.nav-dots {
   position: fixed;
-  right: 2rem;
+  right: 1.75rem;
   top: 50%;
   transform: translateY(-50%);
   z-index: 100;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 
 .nav-dot {
-  width: 12px;
-  height: 12px;
+  width: 11px;
+  height: 11px;
   border-radius: 50%;
-  border: 2px solid var(--text-secondary);
+  border: 2px solid rgba(0, 240, 255, 0.3);
   background: transparent;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -391,118 +321,74 @@ html {
   background: var(--accent);
   border-color: var(--accent);
   transform: scale(1.4);
-  box-shadow: 0 0 15px rgba(59, 130, 246, 0.6);
+  box-shadow: 0 0 14px rgba(0, 240, 255, 0.55);
 }
 
-.dot-label {
+.dot-tooltip {
   position: absolute;
-  right: 25px;
+  right: 22px;
   top: 50%;
   transform: translateY(-50%);
-  background: var(--card-bg);
-  padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
-  font-weight: 600;
+  background: rgba(13, 25, 48, 0.95);
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  padding: 0.3rem 0.8rem;
+  border-radius: 5px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
   color: var(--text);
   white-space: nowrap;
   opacity: 0;
   pointer-events: none;
-  transition: all 0.3s ease;
-  border: 1px solid var(--border);
+  transition: all 0.25s ease;
 }
 
-.nav-dot:hover .dot-label {
+.nav-dot:hover .dot-tooltip {
   opacity: 1;
-  right: 30px;
+  right: 28px;
 }
 
-/* Scroll Hint */
+/* ===== SCROLL HINT ===== */
 .scroll-hint {
   position: fixed;
-  bottom: 3rem;
+  bottom: 2rem;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
   color: var(--text-secondary);
-  font-size: 0.875rem;
-  font-weight: 600;
   z-index: 50;
-  animation: bounce 2s infinite;
+  animation: bounce 2s ease-in-out infinite;
 }
 
-.scroll-hint i {
-  color: var(--accent);
-  font-size: 1.25rem;
-}
+.scroll-hint i { color: var(--accent); font-size: 1rem; }
 
 @keyframes bounce {
-  0%, 100% {
-    transform: translateX(-50%) translateY(0);
-  }
-  50% {
-    transform: translateX(-50%) translateY(-10px);
-  }
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50%       { transform: translateX(-50%) translateY(-8px); }
 }
 
-/* Main */
-main {
-  padding-top: 60px;
-}
+/* ===== TRANSITIONS ===== */
+.fade-enter-active, .fade-leave-active { transition: opacity 0.3s ease; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
 
-/* Transitions */
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.3s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-
+/* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
-  html {
-    scroll-snap-type: none;
-  }
-  
+  html { scroll-snap-type: none; }
+
   .fullpage-section {
     min-height: auto;
     padding: 4rem 0;
   }
-  
-  .nav-links {
-    display: none;
-  }
-  
-  .nav-actions {
-    gap: 0.25rem;
-  }
-  
-  .lang-btn {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.8rem;
-  }
-  
-  .scroll-navigation {
-    right: 1rem;
-    gap: 1rem;
-  }
-  
-  .nav-dot {
-    width: 10px;
-    height: 10px;
-  }
-  
-  .dot-label {
-    display: none;
-  }
-  
-  .scroll-hint {
-    display: none;
-  }
+
+  .nav-links { display: none; }
+  .nav-dots  { display: none; }
+  .scroll-hint { display: none; }
+
+  .nav-actions { gap: 0.3rem; }
+  .lang-btn { padding: 0.35rem 0.65rem; }
 }
 </style>

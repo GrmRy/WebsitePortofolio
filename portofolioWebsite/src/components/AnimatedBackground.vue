@@ -1,98 +1,114 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { onMounted, onUnmounted } from 'vue'
 
-const canvas = ref(null)
-let animationId = null
-let particles = []
-
-class Particle {
-  constructor(canvasWidth, canvasHeight) {
-    this.x = Math.random() * canvasWidth
-    this.y = Math.random() * canvasHeight
-    this.vx = (Math.random() - 0.5) * 0.5
-    this.vy = (Math.random() - 0.5) * 0.5
-    this.radius = Math.random() * 2
-    this.opacity = Math.random() * 0.5 + 0.2
-  }
-
-  update(canvasWidth, canvasHeight) {
-    this.x += this.vx
-    this.y += this.vy
-
-    if (this.x < 0 || this.x > canvasWidth) this.vx *= -1
-    if (this.y < 0 || this.y > canvasHeight) this.vy *= -1
-  }
-
-  draw(ctx) {
-    ctx.fillStyle = `rgba(0, 217, 255, ${this.opacity})`
-    ctx.beginPath()
-    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2)
-    ctx.fill()
-  }
-}
-
-const initCanvas = () => {
-  const ctx = canvas.value.getContext('2d')
-  canvas.value.width = window.innerWidth
-  canvas.value.height = window.innerHeight
-
-  // Create particles
-  particles = []
-  const particleCount = Math.floor((canvas.value.width * canvas.value.height) / 15000)
-  for (let i = 0; i < particleCount; i++) {
-    particles.push(new Particle(canvas.value.width, canvas.value.height))
-  }
-}
-
-const animate = () => {
-  const ctx = canvas.value.getContext('2d')
-  ctx.clearRect(0, 0, canvas.value.width, canvas.value.height)
-
-  // Draw connections
-  for (let i = 0; i < particles.length; i++) {
-    for (let j = i + 1; j < particles.length; j++) {
-      const dx = particles[i].x - particles[j].x
-      const dy = particles[i].y - particles[j].y
-      const distance = Math.sqrt(dx * dx + dy * dy)
-
-      if (distance < 150) {
-        ctx.strokeStyle = `rgba(0, 217, 255, ${0.1 * (1 - distance / 150)})`
-        ctx.lineWidth = 0.5
-        ctx.beginPath()
-        ctx.moveTo(particles[i].x, particles[i].y)
-        ctx.lineTo(particles[j].x, particles[j].y)
-        ctx.stroke()
-      }
-    }
-  }
-
-  // Update and draw particles
-  particles.forEach(particle => {
-    particle.update(canvas.value.width, canvas.value.height)
-    particle.draw(ctx)
-  })
-
-  animationId = requestAnimationFrame(animate)
-}
-
-const handleResize = () => {
-  initCanvas()
-}
+let renderer, animationId
 
 onMounted(() => {
-  initCanvas()
-  animate()
-  window.addEventListener('resize', handleResize)
-})
+  const THREE = window.THREE
 
-onUnmounted(() => {
-  cancelAnimationFrame(animationId)
-  window.removeEventListener('resize', handleResize)
+  const scene = new THREE.Scene()
+  scene.fog = new THREE.FogExp2(0x050b14, 0.0016)
+
+  const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
+  camera.position.z = 30
+
+  renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true })
+  renderer.setSize(window.innerWidth, window.innerHeight)
+  document.getElementById('canvas-container').appendChild(renderer.domElement)
+
+  const group = new THREE.Group()
+  scene.add(group)
+
+  const geos = [
+    new THREE.BoxGeometry(1, 1, 1),
+    new THREE.TetrahedronGeometry(1),
+    new THREE.OctahedronGeometry(1)
+  ]
+
+  const mats = [
+    new THREE.MeshBasicMaterial({ color: 0x00f0ff, wireframe: true, transparent: true, opacity: 0.28 }),
+    new THREE.MeshBasicMaterial({ color: 0xa855f7, wireframe: true, transparent: true, opacity: 0.18 })
+  ]
+
+  for (let i = 0; i < 150; i++) {
+    const mesh = new THREE.Mesh(
+      geos[Math.floor(Math.random() * geos.length)],
+      mats[Math.floor(Math.random() * 2)]
+    )
+    mesh.position.set(
+      (Math.random() - 0.5) * 100,
+      (Math.random() - 0.5) * 100,
+      (Math.random() - 0.5) * 50 - 20
+    )
+    const s = Math.random() * 2 + 0.5
+    mesh.scale.set(s, s, s)
+    mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0)
+    mesh.userData = {
+      rx: (Math.random() - 0.5) * 0.02,
+      ry: (Math.random() - 0.5) * 0.02
+    }
+    group.add(mesh)
+  }
+
+  // Connecting lines
+  const pts = []
+  for (let i = 0; i < 50; i++) {
+    pts.push(new THREE.Vector3(
+      (Math.random() - 0.5) * 80,
+      (Math.random() - 0.5) * 80,
+      (Math.random() - 0.5) * 40 - 10
+    ))
+  }
+  group.add(new THREE.LineSegments(
+    new THREE.BufferGeometry().setFromPoints(pts),
+    new THREE.LineBasicMaterial({ color: 0x00f0ff, transparent: true, opacity: 0.06 })
+  ))
+
+  // Mouse parallax
+  let mx = 0, my = 0
+  const onMouseMove = (e) => {
+    mx = (e.clientX - window.innerWidth / 2) * 0.001
+    my = (e.clientY - window.innerHeight / 2) * 0.001
+  }
+  document.addEventListener('mousemove', onMouseMove)
+
+  // Resize
+  const onResize = () => {
+    camera.aspect = window.innerWidth / window.innerHeight
+    camera.updateProjectionMatrix()
+    renderer.setSize(window.innerWidth, window.innerHeight)
+  }
+  window.addEventListener('resize', onResize)
+
+  // Animate
+  const animate = () => {
+    animationId = requestAnimationFrame(animate)
+    group.rotation.y += (mx - group.rotation.y) * 0.05
+    group.rotation.x += (my - group.rotation.x) * 0.05
+    group.children.forEach(c => {
+      if (c.userData.rx) {
+        c.rotation.x += c.userData.rx
+        c.rotation.y += c.userData.ry
+      }
+    })
+    camera.position.y = -(window.scrollY * 0.01)
+    renderer.render(scene, camera)
+  }
+  animate()
+
+  onUnmounted(() => {
+    cancelAnimationFrame(animationId)
+    renderer.dispose()
+    document.removeEventListener('mousemove', onMouseMove)
+    window.removeEventListener('resize', onResize)
+    const canvas = document.getElementById('canvas-container')
+    if (canvas) canvas.innerHTML = ''
+  })
 })
 </script>
 
 <template>
-  <canvas ref="canvas" class="animated-background"></canvas>
+  <div id="canvas-container" class="animated-background"></div>
 </template>
 
 <style scoped>
@@ -103,6 +119,6 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
   z-index: -1;
-  opacity: 0.3;
+  pointer-events: none;
 }
 </style>

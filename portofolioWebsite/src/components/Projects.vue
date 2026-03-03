@@ -5,16 +5,16 @@ const props = defineProps(['T'])
 const emit = defineEmits(['show-detail'])
 
 const projectItems = ref([
-  { 
+  {
     id: 1,
     icon: 'fas fa-brain',
+    color: '#3b82f6',
     titleKey: 'proj1_title',
     descKey: 'proj1_desc',
     tags: ['Scikit-learn', 'Streamlit', 'Python'],
-    color: '#3b82f6',
     liveDemoUrl: 'https://loanpredict-sbfbu7qqxasv8bbcd9rjey.streamlit.app/',
     githubUrl: 'https://github.com/GrmRy/LoanPredict',
-    detailedDesc: 'A comprehensive machine learning system built with scikit-learn that analyzes multiple factors including credit history, income, employment status, and loan amount to predict loan approval likelihood.',
+    detailedDesc: 'A comprehensive ML system using scikit-learn that analyzes credit history, income, employment status, and loan amount to predict loan approval likelihood in real time.',
     techStack: ['Python 3.9', 'Scikit-learn', 'Pandas', 'NumPy', 'Streamlit', 'Plotly'],
     features: [
       'Real-time loan approval prediction',
@@ -25,41 +25,41 @@ const projectItems = ref([
     challenges: 'Handling imbalanced datasets and ensuring model fairness across different demographic groups.',
     outcome: 'Achieved 92% accuracy with balanced precision and recall metrics.'
   },
-  { 
+  {
     id: 2,
     icon: 'fas fa-chart-line',
+    color: '#8b5cf6',
     titleKey: 'proj2_title',
     descKey: 'proj2_desc',
-    tags: ['Plotly', 'Streamlit', 'Python'],
-    color: '#8b5cf6',
+    tags: ['Plotly', 'Streamlit', 'Pandas'],
     liveDemoUrl: 'https://kpidashboardsales-sbfbu7qqxasv8bbcd9rjey.streamlit.app/',
     githubUrl: 'https://github.com/GrmRy/KPI-Dashboard-Streamlit',
-    detailedDesc: 'An interactive business intelligence dashboard for real-time sales performance monitoring with beautiful visualizations.',
+    detailedDesc: 'An interactive BI dashboard for real-time sales performance monitoring with beautiful Plotly visualizations and dynamic filtering.',
     techStack: ['Python 3.9', 'Plotly', 'Streamlit', 'Pandas', 'SQL'],
     features: [
       'Real-time KPI tracking',
-      'Interactive charts using Plotly',
+      'Interactive Plotly charts',
       'Sales trend analysis',
       'Regional performance comparison'
     ],
     challenges: 'Optimizing data refresh rates and creating responsive visualizations for large datasets.',
     outcome: 'Reduced reporting time by 70% and improved decision-making speed.'
   },
-  { 
+  {
     id: 3,
     icon: 'fas fa-comments',
+    color: '#ec4899',
     titleKey: 'proj3_title',
     descKey: 'proj3_desc',
     tags: ['NLTK', 'Streamlit', 'NLP'],
-    color: '#ec4899',
     liveDemoUrl: 'https://hoksentimentanalysis-3bkajue23249tk2xqdkgod.streamlit.app/',
     githubUrl: 'https://github.com/GrmRy/HOK_SentimentAnalysis',
-    detailedDesc: 'A natural language processing application that analyzes customer opinions from Honor of Kings game reviews.',
+    detailedDesc: 'End-to-end NLP application analyzing Honor of Kings user feedback via Play Store web scraping and a comprehensive NLTK data cleaning pipeline.',
     techStack: ['Python 3.9', 'NLTK', 'Scikit-learn', 'Streamlit', 'Pandas'],
     features: [
       'Multi-class sentiment classification',
       'Real-time text analysis',
-      'Topic modeling and keyword extraction',
+      'Topic modeling & keyword extraction',
       'Word cloud visualization'
     ],
     challenges: 'Processing multilingual text and handling informal gaming terminology and slang.',
@@ -69,138 +69,102 @@ const projectItems = ref([
 
 const currentIndex = ref(0)
 const isPaused = ref(false)
-const carouselTrack = ref(null)
-let autoSlideInterval = null
+let autoSlide = null
 
-const nextSlide = () => {
-  currentIndex.value = (currentIndex.value + 1) % projectItems.value.length
-}
+const next = () => { currentIndex.value = (currentIndex.value + 1) % projectItems.value.length }
+const prev = () => { currentIndex.value = currentIndex.value === 0 ? projectItems.value.length - 1 : currentIndex.value - 1 }
+const goTo = (i) => { currentIndex.value = i }
 
-const prevSlide = () => {
-  currentIndex.value = currentIndex.value === 0 
-    ? projectItems.value.length - 1 
-    : currentIndex.value - 1
-}
+const startAuto = () => { autoSlide = setInterval(() => { if (!isPaused.value) next() }, 5000) }
+const stopAuto  = () => { if (autoSlide) clearInterval(autoSlide) }
 
-const goToSlide = (index) => {
-  currentIndex.value = index
-}
-
-const startAutoSlide = () => {
-  autoSlideInterval = setInterval(() => {
-    if (!isPaused.value) {
-      nextSlide()
-    }
-  }, 5000)
-}
-
-const stopAutoSlide = () => {
-  if (autoSlideInterval) {
-    clearInterval(autoSlideInterval)
-  }
-}
-
-const handleMouseEnter = () => {
-  isPaused.value = true
-}
-
-const handleMouseLeave = () => {
-  isPaused.value = false
-}
-
-const openDetail = (project) => {
-  emit('show-detail', project)
-}
-
-onMounted(() => {
-  startAutoSlide()
-})
-
-onUnmounted(() => {
-  stopAutoSlide()
-})
+onMounted(() => startAuto())
+onUnmounted(() => stopAuto())
 </script>
 
 <template>
   <section id="projects" class="section">
     <div class="container">
-      <div class="section-label">Portfolio</div>
+      <div class="section-label">~/project_builds</div>
       <h2 class="section-title">{{ T.projects_title }}</h2>
       <p class="section-subtitle">A selection of my recent work in data science and machine learning</p>
-      
-      <div class="carousel-wrapper" @mouseenter="handleMouseEnter" @mouseleave="handleMouseLeave">
-        <!-- Navigation Buttons -->
-        <button @click="prevSlide" class="carousel-nav prev" aria-label="Previous project">
+
+      <div
+        class="carousel-wrapper"
+        @mouseenter="isPaused = true"
+        @mouseleave="isPaused = false"
+      >
+        <!-- Nav Buttons -->
+        <button @click="prev" class="carousel-nav prev">
           <i class="fas fa-chevron-left"></i>
         </button>
-        
-        <button @click="nextSlide" class="carousel-nav next" aria-label="Next project">
+        <button @click="next" class="carousel-nav next">
           <i class="fas fa-chevron-right"></i>
         </button>
-        
-        <!-- Carousel Track -->
+
+        <!-- Track -->
         <div class="carousel-container">
-          <div 
-            ref="carouselTrack" 
+          <div
             class="carousel-track"
             :style="{ transform: `translateX(-${currentIndex * 100}%)` }"
           >
-            <div 
-              v-for="(project, index) in projectItems" 
-              :key="project.id" 
+            <div
+              v-for="(project, index) in projectItems"
+              :key="project.id"
               class="carousel-slide"
             >
               <div class="project-card">
-                <div class="project-header">
+
+                <div class="card-header">
                   <div class="project-icon" :style="{ background: project.color }">
                     <i :class="project.icon"></i>
                   </div>
-                  <div class="project-number">0{{ index + 1 }}</div>
+                  <span class="project-number">0{{ index + 1 }}</span>
                 </div>
-                
+
                 <h3 class="project-title">{{ T[project.titleKey] }}</h3>
-                <p class="project-description">{{ T[project.descKey] }}</p>
-                
+                <p class="project-desc">{{ T[project.descKey] }}</p>
+
                 <div class="project-tags">
                   <span v-for="tag in project.tags" :key="tag" class="tag">{{ tag }}</span>
                 </div>
-                
+
                 <div class="project-actions">
-                  <button @click="openDetail(project)" class="btn btn-primary">
-                    <i class="fas fa-info-circle"></i>
-                    View Details
+                  <button @click="emit('show-detail', project)" class="btn-detail">
+                    <i class="fas fa-terminal"></i> DETAILS
                   </button>
                   <div class="project-links">
-                    <a v-if="project.liveDemoUrl" :href="project.liveDemoUrl" target="_blank" class="icon-link" title="Live Demo">
+                    <a v-if="project.liveDemoUrl" :href="project.liveDemoUrl" target="_blank" class="icon-link">
                       <i class="fas fa-external-link-alt"></i>
                     </a>
-                    <a v-if="project.githubUrl" :href="project.githubUrl" target="_blank" class="icon-link" title="GitHub">
+                    <a v-if="project.githubUrl" :href="project.githubUrl" target="_blank" class="icon-link">
                       <i class="fab fa-github"></i>
                     </a>
                   </div>
                 </div>
+
               </div>
             </div>
           </div>
         </div>
-        
-        <!-- Dots Indicator -->
-        <div class="carousel-dots">
-          <button
-            v-for="(project, index) in projectItems"
-            :key="index"
-            @click="goToSlide(index)"
-            :class="['dot', { active: currentIndex === index }]"
-            :aria-label="`Go to project ${index + 1}`"
-          ></button>
+
+        <!-- Dots + Counter -->
+        <div class="carousel-footer">
+          <div class="dots">
+            <button
+              v-for="(p, i) in projectItems"
+              :key="i"
+              @click="goTo(i)"
+              :class="['dot', { active: currentIndex === i }]"
+            ></button>
+          </div>
+          <span class="counter">
+            <span class="current">{{ String(currentIndex + 1).padStart(2, '0') }}</span>
+            <span class="divider">/</span>
+            <span class="total">{{ String(projectItems.length).padStart(2, '0') }}</span>
+          </span>
         </div>
-        
-        <!-- Counter -->
-        <div class="carousel-counter">
-          <span class="current">{{ String(currentIndex + 1).padStart(2, '0') }}</span>
-          <span class="divider">/</span>
-          <span class="total">{{ String(projectItems.length).padStart(2, '0') }}</span>
-        </div>
+
       </div>
     </div>
   </section>
@@ -209,22 +173,22 @@ onUnmounted(() => {
 <style scoped>
 .carousel-wrapper {
   position: relative;
-  margin-top: 2rem;
-  max-width: 900px;
+  margin-top: 2.5rem;
+  max-width: 860px;
   margin-left: auto;
   margin-right: auto;
 }
 
-/* Navigation Buttons */
+/* Nav */
 .carousel-nav {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  width: 50px;
-  height: 50px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  background: var(--card-bg);
-  border: 1px solid var(--border);
+  background: rgba(13, 25, 48, 0.9);
+  border: 1px solid rgba(0, 240, 255, 0.2);
   color: var(--text);
   display: flex;
   align-items: center;
@@ -232,33 +196,25 @@ onUnmounted(() => {
   cursor: pointer;
   transition: all 0.3s ease;
   z-index: 10;
-  font-size: 1.125rem;
+  font-size: 1rem;
 }
 
 .carousel-nav:hover {
   background: var(--accent);
   border-color: var(--accent);
-  color: white;
+  color: var(--bg);
   transform: translateY(-50%) scale(1.1);
 }
 
-.carousel-nav.prev {
-  left: -70px;
-}
+.carousel-nav.prev { left: -60px; }
+.carousel-nav.next { right: -60px; }
 
-.carousel-nav.next {
-  right: -70px;
-}
-
-/* Carousel Container */
-.carousel-container {
-  overflow: hidden;
-  border-radius: 1rem;
-}
+/* Track */
+.carousel-container { overflow: hidden; border-radius: 12px; }
 
 .carousel-track {
   display: flex;
-  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .carousel-slide {
@@ -266,17 +222,32 @@ onUnmounted(() => {
   flex-shrink: 0;
 }
 
-/* Project Card */
+/* Card */
 .project-card {
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: 1rem;
+  background: linear-gradient(145deg, rgba(13, 25, 48, 0.92), rgba(5, 11, 20, 0.92));
+  border: 1px solid rgba(0, 240, 255, 0.18);
+  border-radius: 12px;
   padding: 2rem;
-  margin: 0 0.5rem;
-  transition: all 0.3s ease;
+  margin: 0 0.25rem;
+  position: relative;
+  transition: all 0.35s ease;
 }
 
-.project-header {
+.project-card::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  background: linear-gradient(45deg, #00f0ff, transparent 40%, #a855f7);
+  z-index: -1;
+  border-radius: 13px;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+
+.project-card:hover { border-color: transparent; }
+.project-card:hover::before { opacity: 1; }
+
+.card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -284,36 +255,37 @@ onUnmounted(() => {
 }
 
 .project-icon {
-  width: 60px;
-  height: 60px;
-  border-radius: 1rem;
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 1.75rem;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  font-size: 1.6rem;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
 }
 
 .project-number {
-  font-size: 3rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 3.5rem;
   font-weight: 900;
-  color: var(--border);
+  color: rgba(255, 255, 255, 0.06);
   line-height: 1;
 }
 
 .project-title {
-  font-size: 1.75rem;
+  font-size: 1.6rem;
   font-weight: 700;
-  margin-bottom: 0.75rem;
   color: var(--text);
+  margin-bottom: 0.6rem;
 }
 
-.project-description {
+.project-desc {
   color: var(--text-secondary);
   line-height: 1.8;
+  font-size: 0.95rem;
   margin-bottom: 1.25rem;
-  font-size: 1rem;
 }
 
 .project-tags {
@@ -330,44 +302,68 @@ onUnmounted(() => {
   gap: 1rem;
 }
 
-.project-links {
+.btn-detail {
   display: flex;
-  gap: 0.75rem;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.25rem;
+  background: rgba(0, 240, 255, 0.08);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  border-radius: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
+.btn-detail:hover {
+  background: var(--accent);
+  color: var(--bg);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 240, 255, 0.25);
+}
+
+.project-links { display: flex; gap: 0.6rem; }
+
 .icon-link {
-  width: 40px;
-  height: 40px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
+  background: rgba(13, 25, 48, 0.9);
+  border: 1px solid rgba(0, 240, 255, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--text-secondary);
-  font-size: 1rem;
+  font-size: 0.95rem;
   transition: all 0.3s ease;
+  text-decoration: none;
 }
 
 .icon-link:hover {
   background: var(--accent);
   border-color: var(--accent);
-  color: white;
+  color: var(--bg);
   transform: translateY(-3px);
 }
 
-/* Dots */
-.carousel-dots {
+/* Footer */
+.carousel-footer {
   display: flex;
+  align-items: center;
   justify-content: center;
-  gap: 0.75rem;
-  margin-top: 1.75rem;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
 }
+
+.dots { display: flex; gap: 0.6rem; }
 
 .dot {
   width: 10px;
   height: 10px;
-  border-radius: 50%;
+  border-radius: 5px;
   background: var(--border);
   border: none;
   cursor: pointer;
@@ -375,117 +371,38 @@ onUnmounted(() => {
   padding: 0;
 }
 
-.dot:hover {
-  background: var(--text-secondary);
-  transform: scale(1.2);
-}
+.dot:hover { background: var(--text-secondary); }
 
 .dot.active {
   background: var(--accent);
-  width: 30px;
-  border-radius: 5px;
-  box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+  width: 28px;
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
 }
 
-/* Counter */
-.carousel-counter {
-  position: absolute;
-  top: 2rem;
-  right: 2rem;
+.counter {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-weight: 700;
-  font-size: 1.125rem;
+  gap: 0.3rem;
 }
 
-.carousel-counter .current {
-  color: var(--accent);
-  font-size: 1.5rem;
-}
-
-.carousel-counter .divider {
-  color: var(--border);
-}
-
-.carousel-counter .total {
-  color: var(--text-secondary);
-}
+.counter .current { color: var(--accent); font-size: 1.2rem; font-weight: 700; }
+.counter .divider { color: var(--border); }
+.counter .total   { color: var(--text-secondary); }
 
 /* Responsive */
 @media (max-width: 1024px) {
-  .carousel-nav.prev {
-    left: 0;
-  }
-  
-  .carousel-nav.next {
-    right: 0;
-  }
+  .carousel-nav.prev { left: 0; }
+  .carousel-nav.next { right: 0; }
 }
 
 @media (max-width: 768px) {
-  .carousel-wrapper {
-    margin-top: 2rem;
-  }
-
-  .carousel-nav {
-    width: 40px;
-    height: 40px;
-    font-size: 1rem;
-  }
-  
-  .carousel-nav.prev {
-    left: -10px;
-  }
-  
-  .carousel-nav.next {
-    right: -10px;
-  }
-
-  .project-card {
-    padding: 1.75rem;
-  }
-
-  .project-icon {
-    width: 50px;
-    height: 50px;
-    font-size: 1.5rem;
-  }
-
-  .project-number {
-    font-size: 2rem;
-  }
-
-  .project-title {
-    font-size: 1.5rem;
-  }
-
-  .project-description {
-    font-size: 0.95rem;
-  }
-
-  .project-actions {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .btn {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .project-links {
-    justify-content: center;
-  }
-
-  .carousel-counter {
-    top: 1rem;
-    right: 1rem;
-    font-size: 1rem;
-  }
-
-  .carousel-counter .current {
-    font-size: 1.25rem;
-  }
+  .carousel-nav { display: none; }
+  .project-card { padding: 1.5rem; }
+  .project-title { font-size: 1.3rem; }
+  .project-actions { flex-direction: column; align-items: stretch; }
+  .btn-detail { justify-content: center; }
+  .project-links { justify-content: center; }
 }
 </style>
