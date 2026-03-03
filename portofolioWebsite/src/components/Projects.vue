@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 
 const props = defineProps(['T'])
 const emit = defineEmits(['show-detail'])
@@ -7,11 +7,11 @@ const emit = defineEmits(['show-detail'])
 const projectItems = ref([
   { 
     id: 1,
-    number: '01',
     icon: 'fas fa-brain',
     titleKey: 'proj1_title',
     descKey: 'proj1_desc',
     tags: ['Scikit-learn', 'Streamlit', 'Python'],
+    color: '#3b82f6',
     liveDemoUrl: 'https://loanpredict-sbfbu7qqxasv8bbcd9rjey.streamlit.app/',
     githubUrl: 'https://github.com/GrmRy/LoanPredict',
     detailedDesc: 'A comprehensive machine learning system built with scikit-learn that analyzes multiple factors including credit history, income, employment status, and loan amount to predict loan approval likelihood.',
@@ -27,11 +27,11 @@ const projectItems = ref([
   },
   { 
     id: 2,
-    number: '02',
     icon: 'fas fa-chart-line',
     titleKey: 'proj2_title',
     descKey: 'proj2_desc',
     tags: ['Plotly', 'Streamlit', 'Python'],
+    color: '#8b5cf6',
     liveDemoUrl: 'https://kpidashboardsales-sbfbu7qqxasv8bbcd9rjey.streamlit.app/',
     githubUrl: 'https://github.com/GrmRy/KPI-Dashboard-Streamlit',
     detailedDesc: 'An interactive business intelligence dashboard for real-time sales performance monitoring with beautiful visualizations.',
@@ -47,11 +47,11 @@ const projectItems = ref([
   },
   { 
     id: 3,
-    number: '03',
     icon: 'fas fa-comments',
     titleKey: 'proj3_title',
     descKey: 'proj3_desc',
     tags: ['NLTK', 'Streamlit', 'NLP'],
+    color: '#ec4899',
     liveDemoUrl: 'https://hoksentimentanalysis-3bkajue23249tk2xqdkgod.streamlit.app/',
     githubUrl: 'https://github.com/GrmRy/HOK_SentimentAnalysis',
     detailedDesc: 'A natural language processing application that analyzes customer opinions from Honor of Kings game reviews.',
@@ -69,9 +69,8 @@ const projectItems = ref([
 
 const currentIndex = ref(0)
 const isPaused = ref(false)
+const carouselTrack = ref(null)
 let autoSlideInterval = null
-
-const currentProject = computed(() => projectItems.value[currentIndex.value])
 
 const nextSlide = () => {
   currentIndex.value = (currentIndex.value + 1) % projectItems.value.length
@@ -109,8 +108,8 @@ const handleMouseLeave = () => {
   isPaused.value = false
 }
 
-const openDetail = () => {
-  emit('show-detail', currentProject.value)
+const openDetail = (project) => {
+  emit('show-detail', project)
 }
 
 onMounted(() => {
@@ -125,83 +124,82 @@ onUnmounted(() => {
 <template>
   <section id="projects" class="section">
     <div class="container">
-      <div class="section-header">
-        <div class="section-number">03</div>
-        <h2 class="section-title">{{ T.projects_title }}</h2>
-      </div>
-      <div class="section-content">
-        <div class="carousel-outer" @mouseenter="handleMouseEnter" @mouseleave="handleMouseLeave">
-          <!-- Navigation Left -->
-          <button @click="prevSlide" class="carousel-nav left" aria-label="Previous project">
-            <i class="fas fa-chevron-left"></i>
-          </button>
-          
-          <!-- Main Card Area -->
-          <div class="carousel-main">
-            <TransitionGroup name="fade" mode="out-in">
-              <div :key="currentIndex" class="carousel-card">
-                <div class="carousel-icon">
-                  <i :class="currentProject.icon"></i>
+      <div class="section-label">Portfolio</div>
+      <h2 class="section-title">{{ T.projects_title }}</h2>
+      <p class="section-subtitle">A selection of my recent work in data science and machine learning</p>
+      
+      <div class="carousel-wrapper" @mouseenter="handleMouseEnter" @mouseleave="handleMouseLeave">
+        <!-- Navigation Buttons -->
+        <button @click="prevSlide" class="carousel-nav prev" aria-label="Previous project">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        
+        <button @click="nextSlide" class="carousel-nav next" aria-label="Next project">
+          <i class="fas fa-chevron-right"></i>
+        </button>
+        
+        <!-- Carousel Track -->
+        <div class="carousel-container">
+          <div 
+            ref="carouselTrack" 
+            class="carousel-track"
+            :style="{ transform: `translateX(-${currentIndex * 100}%)` }"
+          >
+            <div 
+              v-for="(project, index) in projectItems" 
+              :key="project.id" 
+              class="carousel-slide"
+            >
+              <div class="project-card">
+                <div class="project-header">
+                  <div class="project-icon" :style="{ background: project.color }">
+                    <i :class="project.icon"></i>
+                  </div>
+                  <div class="project-number">0{{ index + 1 }}</div>
                 </div>
                 
-                <h3 class="carousel-title">{{ T[currentProject.titleKey] }}</h3>
+                <h3 class="project-title">{{ T[project.titleKey] }}</h3>
+                <p class="project-description">{{ T[project.descKey] }}</p>
                 
-                <p class="carousel-description">{{ T[currentProject.descKey] }}</p>
-                
-                <div class="carousel-tags">
-                  <span v-for="tag in currentProject.tags" :key="tag" class="tag">{{ tag }}</span>
+                <div class="project-tags">
+                  <span v-for="tag in project.tags" :key="tag" class="tag">{{ tag }}</span>
                 </div>
-
-                <div class="carousel-actions">
-                  <button @click="openDetail" class="carousel-btn primary">
-                    <i class="fas fa-info-circle"></i> View Details
+                
+                <div class="project-actions">
+                  <button @click="openDetail(project)" class="btn btn-primary">
+                    <i class="fas fa-info-circle"></i>
+                    View Details
                   </button>
-                  <a 
-                    v-if="currentProject.liveDemoUrl"
-                    :href="currentProject.liveDemoUrl" 
-                    target="_blank" 
-                    class="carousel-btn secondary"
-                  >
-                    <i class="fas fa-external-link-alt"></i> Live Demo
-                  </a>
-                  <a 
-                    v-if="currentProject.githubUrl"
-                    :href="currentProject.githubUrl" 
-                    target="_blank" 
-                    class="carousel-btn secondary"
-                  >
-                    <i class="fab fa-github"></i> View Code
-                  </a>
-                </div>
-
-                <div class="project-counter">
-                  {{ currentIndex + 1 }} / {{ projectItems.length }}
+                  <div class="project-links">
+                    <a v-if="project.liveDemoUrl" :href="project.liveDemoUrl" target="_blank" class="icon-link" title="Live Demo">
+                      <i class="fas fa-external-link-alt"></i>
+                    </a>
+                    <a v-if="project.githubUrl" :href="project.githubUrl" target="_blank" class="icon-link" title="GitHub">
+                      <i class="fab fa-github"></i>
+                    </a>
+                  </div>
                 </div>
               </div>
-            </TransitionGroup>
+            </div>
           </div>
-
-          <!-- Navigation Right -->
-          <button @click="nextSlide" class="carousel-nav right" aria-label="Next project">
-            <i class="fas fa-chevron-right"></i>
-          </button>
-          
-          <!-- Dots Navigation -->
-          <div class="carousel-dots">
-            <button
-              v-for="(project, index) in projectItems"
-              :key="index"
-              @click="goToSlide(index)"
-              :class="['dot', { active: currentIndex === index }]"
-              :aria-label="`Go to project ${index + 1}`"
-            ></button>
-          </div>
-
-          <!-- Autoplay Indicator -->
-          <div class="autoplay-indicator" :class="{ paused: isPaused }">
-            <i :class="isPaused ? 'fas fa-pause' : 'fas fa-play'"></i>
-            {{ isPaused ? 'Paused' : 'Auto-playing' }}
-          </div>
+        </div>
+        
+        <!-- Dots Indicator -->
+        <div class="carousel-dots">
+          <button
+            v-for="(project, index) in projectItems"
+            :key="index"
+            @click="goToSlide(index)"
+            :class="['dot', { active: currentIndex === index }]"
+            :aria-label="`Go to project ${index + 1}`"
+          ></button>
+        </div>
+        
+        <!-- Counter -->
+        <div class="carousel-counter">
+          <span class="current">{{ String(currentIndex + 1).padStart(2, '0') }}</span>
+          <span class="divider">/</span>
+          <span class="total">{{ String(projectItems.length).padStart(2, '0') }}</span>
         </div>
       </div>
     </div>
@@ -209,178 +207,168 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-/* Main Container */
-.carousel-outer {
+.carousel-wrapper {
   position: relative;
-  max-width: 1100px;
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: 60px 1fr 60px;
-  gap: 2rem;
-  align-items: center;
+  margin-top: 2rem;
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* Navigation Buttons */
 .carousel-nav {
-  background: rgba(0, 217, 255, 0.1);
-  border: 1px solid rgba(0, 217, 255, 0.3);
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
   width: 50px;
   height: 50px;
   border-radius: 50%;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  color: var(--text);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.3s ease;
-  color: var(--accent);
-  font-size: 1.2rem;
-  align-self: center;
-  justify-self: center;
+  z-index: 10;
+  font-size: 1.125rem;
 }
 
 .carousel-nav:hover {
   background: var(--accent);
-  color: var(--bg);
-  transform: scale(1.15);
+  border-color: var(--accent);
+  color: white;
+  transform: translateY(-50%) scale(1.1);
 }
 
-/* Card Container */
-.carousel-main {
-  width: 100%;
-  max-width: 700px;
-  margin: 0 auto;
+.carousel-nav.prev {
+  left: -70px;
 }
 
-.carousel-card {
-  background: rgba(255, 255, 255, 0.03);
+.carousel-nav.next {
+  right: -70px;
+}
+
+/* Carousel Container */
+.carousel-container {
+  overflow: hidden;
+  border-radius: 1rem;
+}
+
+.carousel-track {
+  display: flex;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.carousel-slide {
+  min-width: 100%;
+  flex-shrink: 0;
+}
+
+/* Project Card */
+.project-card {
+  background: var(--card-bg);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 3rem 2.5rem;
-  text-align: center;
+  border-radius: 1rem;
+  padding: 2rem;
+  margin: 0 0.5rem;
   transition: all 0.3s ease;
 }
 
-.carousel-card:hover {
-  border-color: var(--accent);
-  box-shadow: 0 10px 40px rgba(0, 217, 255, 0.1);
+.project-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
 }
 
-/* Icon */
-.carousel-icon {
-  width: 100px;
-  height: 100px;
-  background: linear-gradient(135deg, rgba(0, 217, 255, 0.1), rgba(0, 255, 136, 0.1));
-  border: 2px solid rgba(0, 217, 255, 0.3);
-  border-radius: 20px;
+.project-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 1rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 3rem;
-  margin: 0 auto 2rem;
-  color: var(--accent);
+  color: white;
+  font-size: 1.75rem;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
 }
 
-/* Title & Description */
-.carousel-title {
-  font-size: 2rem;
+.project-number {
+  font-size: 3rem;
+  font-weight: 900;
+  color: var(--border);
+  line-height: 1;
+}
+
+.project-title {
+  font-size: 1.75rem;
   font-weight: 700;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   color: var(--text);
 }
 
-.carousel-description {
-  font-size: 1.05rem;
+.project-description {
   color: var(--text-secondary);
   line-height: 1.8;
-  margin-bottom: 2rem;
+  margin-bottom: 1.25rem;
+  font-size: 1rem;
 }
 
-/* Tags */
-.carousel-tags {
+.project-tags {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.75rem;
-  margin-bottom: 2rem;
-}
-
-.tag {
-  padding: 0.5rem 1rem;
-  background: rgba(0, 217, 255, 0.1);
-  border: 1px solid rgba(0, 217, 255, 0.2);
-  border-radius: 20px;
-  font-size: 0.9rem;
-  color: var(--accent);
-}
-
-/* Action Buttons */
-.carousel-actions {
-  display: flex;
-  justify-content: center;
-  gap: 0.75rem;
-  margin-bottom: 2rem;
-  flex-wrap: wrap;
-}
-
-.carousel-btn {
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
   gap: 0.5rem;
-  white-space: nowrap;
+  margin-bottom: 1.5rem;
 }
 
-.carousel-btn.primary {
-  background: linear-gradient(135deg, var(--accent), #00ff88);
-  color: var(--bg);
-  border: none;
+.project-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
 }
 
-.carousel-btn.primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 217, 255, 0.4);
+.project-links {
+  display: flex;
+  gap: 0.75rem;
 }
 
-.carousel-btn.secondary {
-  background: transparent;
-  color: var(--accent);
-  border: 1px solid var(--accent);
-}
-
-.carousel-btn.secondary:hover {
-  background: rgba(0, 217, 255, 0.1);
-  transform: translateY(-2px);
-}
-
-/* Counter */
-.project-counter {
+.icon-link {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: var(--text-secondary);
-  font-size: 0.9rem;
-  font-weight: 500;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.icon-link:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+  transform: translateY(-3px);
 }
 
 /* Dots */
 .carousel-dots {
-  position: absolute;
-  bottom: -3.5rem;
-  left: 50%;
-  transform: translateX(-50%);
   display: flex;
   justify-content: center;
   gap: 0.75rem;
+  margin-top: 1.75rem;
 }
 
 .dot {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--border);
   border: none;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -388,121 +376,116 @@ onUnmounted(() => {
 }
 
 .dot:hover {
-  background: rgba(0, 217, 255, 0.5);
+  background: var(--text-secondary);
   transform: scale(1.2);
 }
 
 .dot.active {
   background: var(--accent);
-  width: 35px;
-  border-radius: 6px;
-  box-shadow: 0 0 10px rgba(0, 217, 255, 0.5);
+  width: 30px;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
 }
 
-/* Autoplay Indicator */
-.autoplay-indicator {
+/* Counter */
+.carousel-counter {
   position: absolute;
-  bottom: -5.5rem;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 2rem;
+  right: 2rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-  opacity: 0.6;
+  font-weight: 700;
+  font-size: 1.125rem;
 }
 
-.autoplay-indicator i {
+.carousel-counter .current {
   color: var(--accent);
+  font-size: 1.5rem;
 }
 
-.autoplay-indicator.paused {
-  color: #ff8800;
+.carousel-counter .divider {
+  color: var(--border);
 }
 
-.autoplay-indicator.paused i {
-  color: #ff8800;
-}
-
-/* Transitions */
-.fade-enter-active,
-.fade-leave-active {
-  transition: all 0.5s ease;
-}
-
-.fade-enter-from {
-  opacity: 0;
-  transform: translateX(30px);
-}
-
-.fade-leave-to {
-  opacity: 0;
-  transform: translateX(-30px);
+.carousel-counter .total {
+  color: var(--text-secondary);
 }
 
 /* Responsive */
+@media (max-width: 1024px) {
+  .carousel-nav.prev {
+    left: 0;
+  }
+  
+  .carousel-nav.next {
+    right: 0;
+  }
+}
+
 @media (max-width: 768px) {
-  .carousel-outer {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto auto auto;
-    gap: 1.5rem;
-    padding: 0 1rem;
+  .carousel-wrapper {
+    margin-top: 2rem;
   }
 
   .carousel-nav {
-    width: 45px;
-    height: 45px;
-    font-size: 1.1rem;
-    grid-column: 1;
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+  
+  .carousel-nav.prev {
+    left: -10px;
+  }
+  
+  .carousel-nav.next {
+    right: -10px;
   }
 
-  .carousel-nav.left {
-    grid-row: 1;
+  .project-card {
+    padding: 1.75rem;
   }
 
-  .carousel-main {
-    grid-row: 2;
-    grid-column: 1;
-  }
-
-  .carousel-nav.right {
-    grid-row: 3;
-  }
-
-  .carousel-card {
-    padding: 2rem 1.5rem;
-  }
-
-  .carousel-icon {
-    width: 80px;
-    height: 80px;
-    font-size: 2.5rem;
-  }
-
-  .carousel-title {
+  .project-icon {
+    width: 50px;
+    height: 50px;
     font-size: 1.5rem;
   }
 
-  .carousel-description {
+  .project-number {
+    font-size: 2rem;
+  }
+
+  .project-title {
+    font-size: 1.5rem;
+  }
+
+  .project-description {
     font-size: 0.95rem;
   }
 
-  .carousel-actions {
+  .project-actions {
     flex-direction: column;
+    align-items: stretch;
   }
 
-  .carousel-btn {
+  .btn {
     width: 100%;
     justify-content: center;
   }
-  
-  .carousel-dots {
-    bottom: -2.5rem;
+
+  .project-links {
+    justify-content: center;
   }
-  
-  .autoplay-indicator {
-    bottom: -4.5rem;
+
+  .carousel-counter {
+    top: 1rem;
+    right: 1rem;
+    font-size: 1rem;
+  }
+
+  .carousel-counter .current {
+    font-size: 1.25rem;
   }
 }
 </style>
