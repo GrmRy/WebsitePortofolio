@@ -144,13 +144,13 @@ const socials = [
       </a>
 
       <div class="c-socs">
-        
+        <a
           v-for="s in socials"
           :key="s.label"
           :href="s.href"
           target="_blank"
           class="c-soc"
-        <a>
+        >
           <div class="c-ico" :style="{ background: s.bg }">
             <i :class="s.icon"></i>
           </div>
