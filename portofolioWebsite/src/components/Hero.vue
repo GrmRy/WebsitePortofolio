@@ -1,311 +1,397 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { onMounted, onUnmounted } from 'vue'
 
 defineProps(['T'])
+const emit = defineEmits(['go'])
 
-const typingTexts = ['Data Scientist', 'ML Engineer', 'Problem Solver', 'Data Analyst']
-const displayText = ref('')
-const currentIndex = ref(0)
-const charIndex = ref(0)
-const isDeleting = ref(false)
-let typingTimeout = null
+// ── WAVEFORM CANVAS ──
+let waveAnimId = null
 
-const type = () => {
-  const currentText = typingTexts[currentIndex.value]
+function initWave() {
+  const wc = document.getElementById('waveCanvas')
+  if (!wc) return
+  const wx = wc.getContext('2d')
+  wc.width  = wc.parentElement.offsetWidth
+  wc.height = 52
+  let wt = 0
 
-  if (!isDeleting.value) {
-    displayText.value = currentText.substring(0, charIndex.value + 1)
-    charIndex.value++
-    if (charIndex.value === currentText.length) {
-      typingTimeout = setTimeout(() => {
-        isDeleting.value = true
-        type()
-      }, 1800)
-      return
+  function drawWave() {
+    const W = wc.width, H = wc.height
+    wx.clearRect(0, 0, W, H)
+
+    // grid lines
+    wx.strokeStyle = '#1e2a38'
+    wx.lineWidth   = 1
+    for (let x = 0; x < W; x += 24) {
+      wx.beginPath(); wx.moveTo(x, 0); wx.lineTo(x, H); wx.stroke()
     }
-  } else {
-    displayText.value = currentText.substring(0, charIndex.value - 1)
-    charIndex.value--
-    if (charIndex.value === 0) {
-      isDeleting.value = false
-      currentIndex.value = (currentIndex.value + 1) % typingTexts.length
+    wx.beginPath(); wx.moveTo(0, H / 2); wx.lineTo(W, H / 2); wx.stroke()
+
+    // trace 1 — cyan
+    wx.strokeStyle = 'rgba(56,189,248,.7)'
+    wx.lineWidth   = 1.5
+    wx.beginPath()
+    for (let i = 0; i < W; i++) {
+      const t = (i / W) * Math.PI * 10 + wt
+      const y = H / 2 + Math.sin(t) * 14 + Math.sin(t * 2.1) * 5 + Math.sin(t * .4) * 4
+      i === 0 ? wx.moveTo(i, y) : wx.lineTo(i, y)
     }
+    wx.stroke()
+
+    // trace 2 — amber
+    wx.strokeStyle = 'rgba(245,158,11,.35)'
+    wx.lineWidth   = 1
+    wx.beginPath()
+    for (let i = 0; i < W; i++) {
+      const t = (i / W) * Math.PI * 10 + wt + 1.2
+      const y = H / 2 + Math.sin(t * 1.6) * 9 + Math.cos(t * .7) * 5
+      i === 0 ? wx.moveTo(i, y) : wx.lineTo(i, y)
+    }
+    wx.stroke()
+
+    wt += .018
+    waveAnimId = requestAnimationFrame(drawWave)
   }
+  drawWave()
 
-  typingTimeout = setTimeout(type, isDeleting.value ? 45 : 95)
+  const onResize = () => { wc.width = wc.parentElement.offsetWidth }
+  window.addEventListener('resize', onResize)
 }
 
-onMounted(() => { typingTimeout = setTimeout(type, 500) })
-onUnmounted(() => { if (typingTimeout) clearTimeout(typingTimeout) })
+// ── TERMINAL BOOT SEQUENCE ──
+const LINES = [
+  { d: 0,    h: `<span class="tp">$</span> <span class="tb">./boot_profile.sh</span>` },
+  { d: 350,  h: `<span class="tm">Initializing...</span>` },
+  { d: 700,  h: `<span class="tm">name    <span class="tv">= "Andrea Satria Nagari"</span></span>` },
+  { d: 950,  h: `<span class="tm">role    <span class="tv">= "Data Scientist & ML Engineer"</span></span>` },
+  { d: 1150, h: `<span class="tm">origin  <span class="tv">= "Untidar · EE '24"</span></span>` },
+  { d: 1350, h: `<span class="tm">status  <span class="tg">= AVAILABLE</span></span>` },
+  { d: 1600, h: `` },
+  { d: 1700, h: `<span class="tm">import <span class="tv">scikit_learn</span>   <span class="tg">✓</span></span>` },
+  { d: 1850, h: `<span class="tm">import <span class="tv">tensorflow</span>     <span class="tg">✓</span></span>` },
+  { d: 2000, h: `<span class="tm">import <span class="tv">pandas</span>         <span class="tg">✓</span></span>` },
+  { d: 2150, h: `<span class="tm">import <span class="tv">streamlit</span>      <span class="tg">✓</span></span>` },
+  { d: 2350, h: `` },
+  { d: 2450, h: `<span class="tm">tf_cert       <span class="tg">verified</span></span>` },
+  { d: 2600, h: `<span class="tm">bangkit       <span class="tg">verified</span></span>` },
+  { d: 2750, h: `<span class="tm">deployed      <span class="tv">3 / 3</span></span>` },
+  { d: 2950, h: `<span class="tg">Ready.</span>` },
+  { d: 3100, h: `<span class="tp">$</span> <span class="tblk"></span>` },
+]
+
+let termTimers = []
+
+function initTerminal() {
+  const tb = document.getElementById('termOut')
+  if (!tb) return
+  LINES.forEach(({ d, h }) => {
+    const t = setTimeout(() => {
+      const el = document.createElement('div')
+      el.innerHTML = h || '&nbsp;'
+      tb.appendChild(el)
+      tb.scrollTop = tb.scrollHeight
+    }, d)
+    termTimers.push(t)
+  })
+}
+
+onMounted(() => {
+  initWave()
+  initTerminal()
+})
+
+onUnmounted(() => {
+  if (waveAnimId) cancelAnimationFrame(waveAnimId)
+  termTimers.forEach(t => clearTimeout(t))
+})
 </script>
 
 <template>
-  <section class="hero">
-    <div class="container">
-      <div class="hero-content">
+  <!-- ── INNER GRID ── -->
+  <div class="inner">
 
-        <!-- Status Badge -->
-        <div class="hero-badge fade-in">
-          <span class="status-dot"></span>
-          Available for opportunities
-        </div>
+    <!-- LEFT -->
+    <div class="h-left">
+      <div class="h-meta">
+        <span class="avail-dot"></span>
+        <span>status: available for hire</span>
+        <span class="h-ver">v2.5</span>
+      </div>
 
-        <!-- Nama dengan Glitch -->
-        <h1
-          class="hero-title glitch-wrapper fade-in"
-          data-text="ANDREA SATRIA NAGARI"
-        >
-          ANDREA SATRIA NAGARI
-        </h1>
+      <h1 class="h-name">
+        <span class="n1">ANDREA</span>
+        <span class="n2">SATRIA</span>
+        <span class="n3">NAGARI</span>
+      </h1>
 
-        <!-- Typing Role -->
-        <div class="hero-typing fade-in">
-          <span class="typing-label">const role = </span>
-          <span class="typing-text">"{{ displayText }}"</span>
-          <span class="cursor">|</span>
-        </div>
+      <div class="wave-wrap">
+        <div class="wave-label">SIGNAL_01 — POWER_FORECAST</div>
+        <canvas id="waveCanvas" style="width:100%;height:100%"></canvas>
+      </div>
 
-        <!-- Subtitle -->
-        <p class="hero-description fade-in">{{ T.hero_subtitle }}</p>
-
-        <!-- CTA -->
-        <div class="hero-actions fade-in">
-          <a href="mailto:andreanagari36@gmail.com" class="btn btn-primary">
-            <i class="fas fa-envelope"></i> CONTACT ME
-          </a>
-          <a href="#projects" class="btn btn-outline">
-            <i class="fas fa-terminal"></i> VIEW WORK
-          </a>
-        </div>
-
-        <!-- Socials -->
-        <div class="hero-socials fade-in">
-          <a href="https://github.com/GrmRy" target="_blank" class="social-link">
-            <i class="fab fa-github"></i>
-          </a>
-          <a href="https://www.linkedin.com/in/andrea-satria-nagari/" target="_blank" class="social-link">
-            <i class="fab fa-linkedin"></i>
-          </a>
-          <a href="mailto:andreanagari36@gmail.com" class="social-link">
-            <i class="fas fa-envelope"></i>
-          </a>
-        </div>
-
+      <div class="h-btns">
+        <a href="mailto:andreanagari36@gmail.com" class="btn-prim">
+          <i class="fas fa-paper-plane"></i> Contact Me
+        </a>
+        <button class="btn-sec" @click="emit('go', 3)">
+          <i class="fas fa-terminal"></i> View Work
+        </button>
       </div>
     </div>
 
-    <!-- Scroll hint -->
-    <div class="scroll-hint">
-      <span>scroll to explore</span>
-      <i class="fas fa-chevron-down"></i>
+    <!-- RIGHT — terminal -->
+    <div class="h-right">
+      <div class="term-bar">
+        <span class="tdot" style="background:#ff5f56"></span>
+        <span class="tdot" style="background:#ffbd2e"></span>
+        <span class="tdot" style="background:#27c93f"></span>
+        <span class="tbar-title">bash — profile.sh</span>
+      </div>
+
+      <div class="term-body" id="termOut"></div>
+
+      <div class="h-socials">
+        <a href="https://github.com/GrmRy" target="_blank" class="soc">
+          <i class="fab fa-github"></i>
+        </a>
+        <a href="https://www.linkedin.com/in/andrea-satria-nagari/" target="_blank" class="soc">
+          <i class="fab fa-linkedin"></i>
+        </a>
+        <a href="mailto:andreanagari36@gmail.com" class="soc">
+          <i class="fas fa-envelope"></i>
+        </a>
+      </div>
     </div>
-  </section>
+
+  </div>
+
+  <!-- FOOTER STRIP -->
+  <div class="slide-footer">
+    <span class="sf-left">Data Scientist & ML Engineer</span>
+    <span class="sf-right">
+      Universitas Tidar · Bangkit Academy · <span>@GrmRy</span>
+    </span>
+  </div>
 </template>
 
 <style scoped>
-.hero {
-  min-height: 100vh;
+/* ── INNER LAYOUT ── */
+.inner {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  padding-top: 48px;
+  min-height: 0;
+}
+
+/* ── LEFT ── */
+.h-left {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 3.5rem 3rem 3.5rem 2.5rem;
+  border-right: 1px solid var(--border);
+}
+
+.h-meta {
+  font-family: var(--mono);
+  font-size: .68rem;
+  color: var(--muted);
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  margin-bottom: 2rem;
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: .75rem;
+}
+.h-ver { margin-left: auto; }
+
+.avail-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  flex-shrink: 0;
+  animation: blink-dot 3s ease-in-out infinite;
+}
+
+/* Name */
+.h-name {
+  font-weight: 900;
+  line-height: .9;
+  letter-spacing: -.04em;
+  color: var(--bright);
+  margin-bottom: 2.5rem;
+}
+.n1 {
+  font-size: clamp(3rem, 6.5vw, 5.5rem);
+  display: block;
+  color: var(--bright);
+}
+.n2 {
+  font-size: clamp(3rem, 6.5vw, 5.5rem);
+  display: block;
+  -webkit-text-stroke: 1px #2a3f58;
+  -webkit-text-fill-color: transparent;
+}
+.n3 {
+  font-size: clamp(3rem, 6.5vw, 5.5rem);
+  display: block;
+  color: var(--cyan);
+  -webkit-text-fill-color: var(--cyan);
+}
+
+/* Waveform */
+.wave-wrap {
+  width: 100%;
+  height: 52px;
+  margin-bottom: 2.5rem;
   position: relative;
   overflow: hidden;
+  border-top:    1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.wave-label {
+  position: absolute;
+  top: 4px;
+  left: 0;
+  font-family: var(--mono);
+  font-size: .58rem;
+  color: var(--amber);
+  letter-spacing: .12em;
+  opacity: .6;
+  pointer-events: none;
 }
 
-.hero-content {
-  max-width: 800px;
-  position: relative;
-  z-index: 10;
-  animation: heroEnter 1s ease;
-}
+/* Buttons */
+.h-btns { display: flex; gap: .75rem; }
 
-@keyframes heroEnter {
-  from { opacity: 0; transform: translateY(50px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-/* Badge */
-.hero-badge {
+.btn-prim {
+  font-family: var(--mono);
+  font-size: .73rem;
+  padding: .75rem 1.5rem;
+  border-radius: 2px;
+  background: var(--cyan);
+  color: var(--bg);
+  border: none;
+  cursor: pointer;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  font-weight: 700;
+  text-decoration: none;
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1.25rem;
-  background: rgba(0, 240, 255, 0.08);
-  border: 1px solid rgba(0, 240, 255, 0.25);
-  border-radius: 2rem;
-  color: var(--accent);
-  font-size: 0.8rem;
-  font-family: 'JetBrains Mono', monospace;
-  margin-bottom: 1.5rem;
+  gap: .5rem;
+  transition: opacity .2s;
+}
+.btn-prim:hover { opacity: .85; }
+
+.btn-sec {
+  font-family: var(--mono);
+  font-size: .73rem;
+  padding: .75rem 1.5rem;
+  border-radius: 2px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+  cursor: pointer;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  transition: border-color .2s, color .2s;
+}
+.btn-sec:hover { border-color: var(--cyan); color: var(--cyan); }
+
+/* ── RIGHT — terminal ── */
+.h-right {
+  background: var(--s1);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
-.status-dot {
-  width: 8px;
-  height: 8px;
-  background: var(--accent);
-  border-radius: 50%;
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50%       { opacity: 0.4; transform: scale(1.3); }
-}
-
-/* Glitch */
-.glitch-wrapper {
-  position: relative;
-  display: inline-block;
-}
-
-.glitch-wrapper::before,
-.glitch-wrapper::after {
-  content: attr(data-text);
-  position: absolute;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  opacity: 0.8;
-}
-
-.glitch-wrapper::before {
-  left: 2px;
-  text-shadow: -2px 0 #ff003c;
-  clip: rect(24px, 550px, 90px, 0);
-  animation: glitch 3s infinite linear alternate-reverse;
-}
-
-.glitch-wrapper::after {
-  left: -2px;
-  text-shadow: -2px 0 #00f0ff;
-  clip: rect(85px, 550px, 140px, 0);
-  animation: glitch 2.5s infinite linear alternate-reverse;
-}
-
-@keyframes glitch {
-  0%   { clip: rect(10px, 9999px, 83px, 0); }
-  20%  { clip: rect(62px, 9999px, 12px, 0); }
-  40%  { clip: rect(44px, 9999px, 53px, 0); }
-  60%  { clip: rect(88px, 9999px,  9px, 0); }
-  80%  { clip: rect( 2px, 9999px, 66px, 0); }
-  100% { clip: rect(91px, 9999px, 34px, 0); }
-}
-
-/* Title */
-.hero-title {
-  font-size: clamp(2.5rem, 8vw, 5rem);
-  font-weight: 900;
-  letter-spacing: -0.03em;
-  color: white;
-  margin-bottom: 1.25rem;
-  animation: floating 3.5s ease-in-out infinite;
-}
-
-@keyframes floating {
-  0%, 100% { transform: translateY(0px); }
-  50%       { transform: translateY(-12px); }
-}
-
-/* Typing */
-.hero-typing {
-  font-size: clamp(1rem, 3vw, 1.5rem);
-  font-family: 'JetBrains Mono', monospace;
-  margin-bottom: 1.5rem;
-  min-height: 2.5rem;
+.term-bar {
+  height: 34px;
+  background: var(--s2);
+  border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 0.4rem;
+  padding: 0 1rem;
+  gap: .4rem;
+  flex-shrink: 0;
+}
+.tdot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.tbar-title {
+  margin: 0 auto;
+  font-family: var(--mono);
+  font-size: .62rem;
+  color: var(--muted);
+  letter-spacing: .08em;
 }
 
-.typing-label { color: var(--purple); }
-.typing-text  { color: var(--accent); min-width: 200px; }
-
-.cursor {
-  color: var(--accent);
-  font-weight: 300;
-  animation: blink 1s steps(1) infinite;
+.term-body {
+  flex: 1;
+  padding: 1.25rem;
+  font-family: var(--mono);
+  font-size: .75rem;
+  line-height: 1.95;
+  overflow: hidden;
+  min-height: 0;
 }
 
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0; }
-}
-
-/* Description */
-.hero-description {
-  font-size: 1.05rem;
-  color: var(--text-secondary);
-  line-height: 1.8;
-  margin-bottom: 2rem;
-  max-width: 560px;
-}
-
-/* Actions */
-.hero-actions {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 2rem;
-  flex-wrap: wrap;
+/* terminal text colors */
+.term-body :deep(.tp) { color: var(--cyan); }
+.term-body :deep(.tv) { color: var(--amber); }
+.term-body :deep(.tg) { color: var(--green); }
+.term-body :deep(.tm) { color: var(--muted); }
+.term-body :deep(.tb) { color: var(--bright); }
+.term-body :deep(.tblk) {
+  display: inline-block;
+  width: 7px;
+  height: .85em;
+  background: var(--cyan);
+  vertical-align: middle;
+  animation: blink .85s steps(1) infinite;
 }
 
 /* Socials */
-.hero-socials {
+.h-socials {
+  border-top: 1px solid var(--border);
+  padding: .85rem 1.25rem;
   display: flex;
-  gap: 0.75rem;
+  gap: .5rem;
+  flex-shrink: 0;
 }
-
-.social-link {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: rgba(13, 25, 48, 0.9);
-  border: 1px solid rgba(0, 240, 255, 0.2);
+.soc {
+  width: 32px;
+  height: 32px;
+  border-radius: 2px;
+  border: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-secondary);
-  font-size: 1.1rem;
-  transition: all 0.3s ease;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: .85rem;
+  transition: border-color .2s, color .2s;
 }
+.soc:hover { border-color: var(--cyan); color: var(--cyan); }
 
-.social-link:hover {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--bg);
-  transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(0, 240, 255, 0.3);
+/* ── ANIMATIONS ── */
+@keyframes blink-dot {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: .35; }
 }
-
-/* Scroll Hint */
-.scroll-hint {
-  position: absolute;
-  bottom: 2rem;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.4rem;
-  color: var(--text-secondary);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.75rem;
-  animation: bounce 2s infinite;
-}
-
-.scroll-hint i { color: var(--accent); }
-
-@keyframes bounce {
-  0%, 100% { transform: translateX(-50%) translateY(0); }
-  50%       { transform: translateX(-50%) translateY(-8px); }
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .glitch-wrapper::before,
-  .glitch-wrapper::after { display: none; }
-
-  .hero-actions { flex-direction: column; }
-  .btn { width: 100%; justify-content: center; }
-  .scroll-hint { display: none; }
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
 }
 </style>

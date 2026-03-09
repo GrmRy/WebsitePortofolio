@@ -1,56 +1,45 @@
 export default {
   en: {
-    nav_about: 'About',
-    nav_expertise: 'Expertise',
-    nav_projects: 'Projects',
-    nav_contact: 'Contact',
-    hero_label: 'Data Scientist & ML Engineer',
+    // About
+    about_p1: 'S1 Electrical Engineering graduate bridging hardware intuition and data intelligence. From PLTA power forecasting to desktop GUI tools — I turn raw signals into decisions. Bangkit Academy (Google) alumni. TensorFlow certified.',
+
+    // Hero
     hero_subtitle: 'Transforming data into intelligent business solutions through machine learning and advanced analytics.',
-    about_title: 'About Me',
-    about_p1: 'I am a professional in data science and machine learning with experience in developing data-driven solutions for various business problems. My expertise includes Python, SQL, and various machine learning frameworks.',
-    about_p2: 'I constantly strive to learn and grow. With a strong collaborative spirit, I enjoy working in teams as well as independently to achieve common goals.',
-    expertise_title: 'My Expertise',
-    exp1_title: 'Machine Learning',
-    exp1_desc: 'Building predictive models and algorithms using scikit-learn, TensorFlow, and other ML frameworks.',
-    exp2_title: 'Data Analytics',
-    exp2_desc: 'Extracting insights from complex datasets using Python, SQL, and visualization tools.',
-    exp3_title: 'Development',
-    exp3_desc: 'Creating interactive applications and dashboards with Streamlit and modern web technologies.',
-    projects_title: 'Featured Projects',
-    proj1_title: 'Loan Predictor',
-    proj1_desc: 'A machine learning system to assess borrower eligibility and predict loan approval with high accuracy.',
+
+    // Projects
+    proj1_title: 'Loan Approval Predictor',
+    proj1_desc:  'End-to-end ML system analyzing credit history, income & employment for real-time approval prediction. 92% accuracy.',
     proj2_title: 'Sales KPI Dashboard',
-    proj2_desc: 'An interactive dashboard for real-time visualization of sales metrics and business intelligence.',
+    proj2_desc:  'Interactive BI platform. Reduced reporting time by 70%.',
     proj3_title: 'Sentiment Analysis',
-    proj3_desc: 'NLP application for classifying customer opinions and extracting insights from text data.',
-    contact_title: "Let's Get In Touch",
-    footer_text: 'Built with passion'
+    proj3_desc:  'NLP pipeline for HOK reviews via Play Store scraping. 85% confidence.',
+
+    // Contact
+    contact_heading: "Let's Build Something Together",
+    contact_sub:     'Open to full-time roles, freelance, or collaboration in data science, ML engineering, or analytics.',
+    contact_avail:   'Open for Opportunities',
+    contact_avail_desc: 'Currently seeking roles where I can apply ML engineering, data science, and analytics skills.',
   },
+
   id: {
-    nav_about: 'Tentang',
-    nav_expertise: 'Keahlian',
-    nav_projects: 'Proyek',
-    nav_contact: 'Kontak',
-    hero_label: 'Data Scientist & ML Engineer',
+    // About
+    about_p1: 'Lulusan S1 Teknik Elektro yang menjembatani intuisi hardware dan kecerdasan data. Dari prediksi daya PLTA hingga aplikasi GUI desktop — saya mengubah sinyal mentah menjadi keputusan. Alumni Bangkit Academy (Google). Tersertifikasi TensorFlow.',
+
+    // Hero
     hero_subtitle: 'Mengubah data menjadi solusi bisnis yang cerdas melalui machine learning dan analitik lanjutan.',
-    about_title: 'Tentang Saya',
-    about_p1: 'Saya seorang profesional di bidang data science dan machine learning dengan pengalaman dalam mengembangkan solusi berbasis data untuk berbagai masalah bisnis. Keahlian saya meliputi Python, SQL, dan berbagai framework machine learning.',
-    about_p2: 'Saya selalu berusaha untuk terus belajar dan mengembangkan diri. Dengan semangat kolaborasi yang tinggi, saya senang bekerja dalam tim maupun secara mandiri untuk mencapai tujuan bersama.',
-    expertise_title: 'Keahlian Saya',
-    exp1_title: 'Machine Learning',
-    exp1_desc: 'Membangun model prediktif dan algoritma menggunakan scikit-learn, TensorFlow, dan framework ML lainnya.',
-    exp2_title: 'Analitik Data',
-    exp2_desc: 'Mengekstrak wawasan dari dataset kompleks menggunakan Python, SQL, dan alat visualisasi.',
-    exp3_title: 'Pengembangan',
-    exp3_desc: 'Membuat aplikasi dan dashboard interaktif dengan Streamlit dan teknologi web modern.',
-    projects_title: 'Proyek Pilihan',
-    proj1_title: 'Loan Predictor',
-    proj1_desc: 'Sistem machine learning untuk menilai kelayakan peminjam dan memprediksi persetujuan pinjaman dengan akurasi tinggi.',
+
+    // Projects
+    proj1_title: 'Loan Approval Predictor',
+    proj1_desc:  'Sistem ML end-to-end yang menganalisis riwayat kredit, pendapatan & pekerjaan untuk prediksi persetujuan pinjaman secara real-time. Akurasi 92%.',
     proj2_title: 'Sales KPI Dashboard',
-    proj2_desc: 'Dashboard interaktif untuk visualisasi real-time metrik penjualan dan business intelligence.',
+    proj2_desc:  'Platform BI interaktif. Mengurangi waktu pelaporan sebesar 70%.',
     proj3_title: 'Sentiment Analysis',
-    proj3_desc: 'Aplikasi NLP untuk mengklasifikasikan opini pelanggan dan mengekstrak insight dari data teks.',
-    contact_title: 'Mari Terhubung',
-    footer_text: 'Dibuat dengan semangat'
+    proj3_desc:  'Pipeline NLP untuk ulasan HOK via scraping Play Store. Confidence 85%.',
+
+    // Contact
+    contact_heading: 'Mari Bangun Sesuatu Bersama',
+    contact_sub:     'Terbuka untuk pekerjaan penuh waktu, freelance, atau kolaborasi di bidang data science, ML engineering, atau analitik.',
+    contact_avail:   'Terbuka untuk Peluang',
+    contact_avail_desc: 'Saat ini mencari peran di mana saya dapat menerapkan keahlian ML engineering, data science, dan analitik.',
   }
-};
+}
