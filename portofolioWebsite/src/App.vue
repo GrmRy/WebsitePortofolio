@@ -163,8 +163,4 @@ const DOT_LABELS = ['Init', 'About', 'Skills', 'Projects', 'Contact']
 <style>
 /* reset global overflow — pindah dari main.css ke sini
    supaya tidak bentrok dengan Vite dev server */
-html, body, #app {
-  height: 100%;
-  overflow: hidden;
-}
 </style>
