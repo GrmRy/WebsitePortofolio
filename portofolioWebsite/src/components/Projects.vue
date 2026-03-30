@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onUnmounted } from 'vue'
 
 import imgLoan      from '@/assets/proj-loan.png'
 import imgKpi       from '@/assets/proj-kpi.png'
@@ -49,42 +49,49 @@ const projects = [
   },
 ]
 
-/*
-  State shape:
-  { big: id, bigCol: 'left'|'right', top: id, bot: id }
-
-  big    = card that spans full height of its column
-  bigCol = which column big card is in
-  top    = card at top of the OTHER column
-  bot    = card at bottom of the OTHER column
-
-  Transition on hover(X):
-  - X is already big → no-op
-  - X is top → { big:X, bigCol:smallCol, top:prevBig, bot:prevBot }
-  - X is bot → { big:X, bigCol:smallCol, top:prevTop, bot:prevBig }
-  where smallCol = opposite of current bigCol
-*/
+// ── STATE ──
+// big    = id card yang featured (full height, kolom sendiri)
+// bigCol = kolom mana big card berada ('left' | 'right')
+// top    = id card di atas kolom kecil
+// bot    = id card di bawah kolom kecil
 const state = ref({ big: 0, bigCol: 'left', top: 1, bot: 2 })
 
+// ── HOVER DELAY ──
+let hoverTimer = null
+
 function onHover(id) {
-  const s = state.value
-  if (id === s.big) return
-  const smallCol = s.bigCol === 'left' ? 'right' : 'left'
-  if (id === s.top) {
-    state.value = { big: id, bigCol: smallCol, top: s.big, bot: s.bot }
-  } else {
-    state.value = { big: id, bigCol: smallCol, top: s.top, bot: s.big }
-  }
+  clearTimeout(hoverTimer)
+  hoverTimer = setTimeout(() => {
+    const s = state.value
+    if (id === s.big) return
+    const smallCol = s.bigCol === 'left' ? 'right' : 'left'
+    if (id === s.top) {
+      state.value = { big: id, bigCol: smallCol, top: s.big, bot: s.bot }
+    } else {
+      state.value = { big: id, bigCol: smallCol, top: s.top, bot: s.big }
+    }
+  }, 150)
 }
 
-// grid-template-areas string for the bento
+function onLeave() {
+  clearTimeout(hoverTimer)
+}
+
+onUnmounted(() => clearTimeout(hoverTimer))
+
+// ── COMPUTED ──
 const gridAreas = computed(() => {
   if (state.value.bigCol === 'left')
     return '"big top stat" "big bot stat"'
   return '"top big stat" "bot big stat"'
 })
 
-// grid-area name per card
+const gridCols = computed(() => {
+  if (state.value.bigCol === 'left')
+    return '2fr .75fr .42fr'
+  return '.75fr 2fr .42fr'
+})
+
 function areaOf(id) {
   const s = state.value
   if (id === s.big) return 'big'
@@ -101,12 +108,13 @@ function isBig(id) { return state.value.big === id }
       <div class="chip">~ / project_builds</div>
     </div>
 
-    <!-- dynamic grid via inline style -->
     <div
       class="bento"
-      :style="{ gridTemplateAreas: gridAreas }"
+      :style="{
+        gridTemplateAreas: gridAreas,
+        gridTemplateColumns: gridCols,
+      }"
     >
-
       <!-- CARDS -->
       <div
         v-for="p in projects"
@@ -114,6 +122,7 @@ function isBig(id) { return state.value.big === id }
         :class="['card', { big: isBig(p.id), small: !isBig(p.id) }]"
         :style="{ '--ac': p.accent, gridArea: areaOf(p.id) }"
         @mouseenter="onHover(p.id)"
+        @mouseleave="onLeave"
       >
         <div class="abar"></div>
 
@@ -122,6 +131,9 @@ function isBig(id) { return state.value.big === id }
           <img :src="p.img" class="timg" alt="" />
           <div class="tgrad"></div>
           <span :class="['tbadge', p.statT]">{{ p.stat }}</span>
+          <div class="hover-hint">
+            <i class="fas fa-expand-alt"></i> hover to feature
+          </div>
         </div>
 
         <!-- BODY -->
@@ -138,11 +150,11 @@ function isBig(id) { return state.value.big === id }
         <div class="cfoot">
           <a :href="p.demo" target="_blank" class="cbtn" @click.stop>
             <i class="fas fa-external-link-alt"></i>
-            <span class="lbl"> Demo</span>
+            <span class="lbl">&nbsp;Demo</span>
           </a>
           <a :href="p.repo" target="_blank" class="cbtn ghost" @click.stop>
             <i class="fab fa-github"></i>
-            <span class="lbl"> Repo</span>
+            <span class="lbl">&nbsp;Repo</span>
           </a>
         </div>
 
@@ -155,11 +167,13 @@ function isBig(id) { return state.value.big === id }
         <div class="sp-l">Projects<br>Deployed</div>
         <div class="sp-hr"></div>
         <div class="sp-tags">
-          <span class="ctag" v-for="t in ['Python','Streamlit','SQL','NLP','ML','PyQt5']" :key="t">{{ t }}</span>
+          <span class="ctag"
+            v-for="t in ['Python','Streamlit','SQL','NLP','ML','PyQt5']"
+            :key="t"
+          >{{ t }}</span>
         </div>
         <div class="sp-c">TECH STACK</div>
       </div>
-
     </div>
   </div>
 
@@ -190,19 +204,15 @@ function isBig(id) { return state.value.big === id }
   margin-bottom: .5rem;
 }
 
-/* ── BENTO ──
-   3 cols: project-left | project-right | stat
-   2 rows: equal height
-   grid-template-areas is set inline (dynamic)
-*/
+/* ── BENTO ── */
 .bento {
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: 1.65fr 1fr .42fr;
   grid-template-rows: 1fr 1fr;
   gap: .7rem;
   overflow: hidden;
+  transition: grid-template-columns .5s cubic-bezier(.4,0,.2,1);
 }
 
 /* ── CARD BASE ── */
@@ -216,31 +226,26 @@ function isBig(id) { return state.value.big === id }
   position: relative;
   min-height: 0;
   transition: border-color .35s, box-shadow .35s;
-  cursor: default;
 }
 
-/* BIG card — featured */
 .card.big {
   border-color: var(--ac);
-  box-shadow: 0 0 28px -8px color-mix(in srgb, var(--ac) 30%, transparent);
+  box-shadow: 0 0 30px -8px color-mix(in srgb, var(--ac) 35%, transparent);
+  cursor: default;
 }
-
-/* SMALL card — hoverable */
-.card.small {
-  cursor: pointer;
-}
+.card.small { cursor: pointer; }
 .card.small:hover {
-  border-color: color-mix(in srgb, var(--ac) 60%, transparent);
+  border-color: color-mix(in srgb, var(--ac) 50%, transparent);
 }
 
-/* accent top bar */
+/* accent bar */
 .abar {
   height: 2px;
   background: var(--ac);
   flex-shrink: 0;
   transform: scaleX(0);
   transform-origin: left;
-  transition: transform .4s cubic-bezier(.4,0,.2,1);
+  transition: transform .45s cubic-bezier(.4,0,.2,1);
 }
 .card.big .abar { transform: scaleX(1); }
 
@@ -251,25 +256,23 @@ function isBig(id) { return state.value.big === id }
   overflow: hidden;
   border-bottom: 1px solid var(--border);
   background: var(--s2);
-  transition: height .4s cubic-bezier(.4,0,.2,1);
 }
-
-/* big card: tall image */
-.card.big .thumb   { height: 45%; }
-/* small card: short image */
-.card.small .thumb { height: 35%; }
+.card.big   .thumb { height: 48%; }
+.card.small .thumb { height: 38%; }
 
 .timg {
-  width: 100%;
-  height: 100%;
+  width: 100%; height: 100%;
   object-fit: cover;
   object-position: top left;
   display: block;
   transition: filter .4s, transform .5s cubic-bezier(.4,0,.2,1);
 }
-.card.big   .timg { filter: brightness(.9) saturate(1);   transform: scale(1);    }
-.card.small .timg { filter: brightness(.6) saturate(.4);  }
-.card.small:hover .timg { filter: brightness(.75) saturate(.7); }
+.card.big   .timg { filter: brightness(.9) saturate(1); }
+.card.small .timg { filter: brightness(.55) saturate(.35); }
+.card.small:hover .timg {
+  filter: brightness(.75) saturate(.65);
+  transform: scale(1.03);
+}
 
 .tgrad {
   position: absolute; inset: 0;
@@ -284,12 +287,24 @@ function isBig(id) { return state.value.big === id }
   background: rgba(56,189,248,.18);
   border: 1px solid rgba(56,189,248,.45);
   color: var(--cyan);
+  transition: opacity .3s;
 }
 .tbadge.am { background: rgba(245,158,11,.18); border-color: rgba(245,158,11,.45); color: var(--amber); }
 .tbadge.gr { background: rgba(52,211,153,.18); border-color: rgba(52,211,153,.45); color: var(--green); }
+.card.small .tbadge { opacity: 0; }
+.card.small:hover .tbadge { opacity: 1; }
 
-/* hide badge on small cards */
-.card.small .tbadge { display: none; }
+/* hover hint */
+.hover-hint {
+  position: absolute; bottom: .45rem; right: .55rem;
+  font-family: var(--mono); font-size: .48rem;
+  color: var(--muted); letter-spacing: .08em;
+  opacity: 0; transition: opacity .3s;
+  display: flex; align-items: center; gap: .3rem;
+  pointer-events: none;
+}
+.card.small:hover .hover-hint { opacity: .7; }
+.card.big .hover-hint { display: none; }
 
 /* ── CARD BODY ── */
 .cbody {
@@ -309,8 +324,8 @@ function isBig(id) { return state.value.big === id }
   font-weight: 800; color: var(--bright);
   letter-spacing: -.02em; line-height: 1.2;
 }
-.card.big   .ctitle { font-size: clamp(.88rem, 1.2vw, 1.1rem); }
-.card.small .ctitle { font-size: clamp(.75rem, .9vw, .85rem); }
+.card.big   .ctitle { font-size: clamp(.9rem, 1.2vw, 1.1rem); }
+.card.small .ctitle { font-size: clamp(.75rem, .88vw, .85rem); }
 
 .cdesc {
   font-size: .69rem; color: var(--muted); line-height: 1.6;
@@ -354,11 +369,9 @@ function isBig(id) { return state.value.big === id }
   color: var(--muted); font-weight: 400;
 }
 .cbtn.ghost:hover { border-color: var(--ac); color: var(--ac); opacity: 1; }
-
-/* hide text labels on small cards */
 .card.small .lbl { display: none; }
 
-/* glow overlay */
+/* glow */
 .cglow {
   position: absolute; inset: 0; pointer-events: none;
   background: radial-gradient(
