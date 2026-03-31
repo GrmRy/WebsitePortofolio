@@ -6,6 +6,7 @@ import Skills   from './components/Skills.vue'
 import Projects from './components/Projects.vue'
 import Contact  from './components/Contact.vue'
 import translations from './translations.js'
+import { Analytics } from "@vercel/analytics/vue"
 
 const currentLang = ref('en')
 const T = ref(translations['en'])
@@ -116,6 +117,7 @@ const DOT_LABELS = ['Init', 'About', 'Skills', 'Projects', 'Contact']
     </div>
 
   </div>
+  <Analytics />
 </template>
 
 <style>
