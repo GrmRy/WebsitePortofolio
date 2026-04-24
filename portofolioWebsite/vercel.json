@@ -1,0 +1,24 @@
+{
+  "redirects": [
+    {
+      "source": "/cv",
+      "destination": "/?utm_source=cv&utm_medium=document",
+      "permanent": false
+    },
+    {
+      "source": "/email",
+      "destination": "/?utm_source=email&utm_medium=application",
+      "permanent": false
+    },
+    {
+      "source": "/linkedin",
+      "destination": "/?utm_source=linkedin&utm_medium=profile",
+      "permanent": false
+    },
+    {
+      "source": "/wa",
+      "destination": "/?utm_source=whatsapp&utm_medium=direct",
+      "permanent": false
+    }
+  ]
+}
